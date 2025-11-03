@@ -64,8 +64,23 @@ else
     echo -e "${GREEN}  ✓ Created testing AGENTS.md symlink${NC}"
 fi
 
-# 3. Install Node dependencies for skills
-echo -e "\n${YELLOW}Step 3: Installing Node dependencies for skills...${NC}"
+# 3. Link pre-commit scripts
+echo -e "\n${YELLOW}Step 3: Linking pre-commit scripts...${NC}"
+PRE_COMMIT_LINK="$PROJECT_ROOT/.pre-commit-scripts"
+
+if [ -L "$PRE_COMMIT_LINK" ]; then
+    echo "  ✓ .pre-commit-scripts symlink already exists"
+elif [ -d "$PRE_COMMIT_LINK" ]; then
+    echo -e "${RED}  ✗ .pre-commit-scripts exists as a directory (not a symlink)${NC}"
+    echo "    Move it first: mv $PRE_COMMIT_LINK ${PRE_COMMIT_LINK}.backup"
+    exit 1
+else
+    ln -s "$SUPERPOWERS_DIR/pre-commit-scripts" "$PRE_COMMIT_LINK"
+    echo -e "${GREEN}  ✓ Created .pre-commit-scripts symlink${NC}"
+fi
+
+# 4. Install Node dependencies for skills
+echo -e "\n${YELLOW}Step 4: Installing Node dependencies for skills...${NC}"
 
 # Check if npm is available
 if ! command -v npm &> /dev/null; then
@@ -90,8 +105,8 @@ else
     fi
 fi
 
-# 4. Update CLAUDE.md to point to the new structure
-echo -e "\n${YELLOW}Step 4: Updating CLAUDE.md redirect...${NC}"
+# 5. Update CLAUDE.md to point to the new structure
+echo -e "\n${YELLOW}Step 5: Updating CLAUDE.md redirect...${NC}"
 CLAUDE_MD="$PROJECT_ROOT/CLAUDE.md"
 
 cat > "$CLAUDE_MD" << 'CLAUDEMD'
@@ -125,6 +140,7 @@ echo -e "\n${GREEN}✓ Installation complete!${NC}"
 echo ""
 echo "The following symlinks have been created:"
 echo "  - $PROJECT_ROOT/.claude -> $SUPERPOWERS_DIR/dot-claude"
+echo "  - $PROJECT_ROOT/.pre-commit-scripts -> $SUPERPOWERS_DIR/pre-commit-scripts"
 echo "  - $PROJECT_ROOT/AGENTS.md -> $SUPERPOWERS_DIR/system-prompts/AGENTS.md"
 echo "  - $PROJECT_ROOT/api/tests/AGENTS.md -> $SUPERPOWERS_DIR/system-prompts/testing/AGENTS.md"
 echo ""

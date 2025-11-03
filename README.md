@@ -11,6 +11,8 @@ superpowers/
 │   ├── commands/        # Slash commands (/buildit, /planit, /review-code, etc.)
 │   ├── skills/          # Skills (docker-log-debugger, langfuse-prompt-viewer, etc.)
 │   └── settings.local.json
+├── pre-commit-scripts/  # Pre-commit hooks and linting scripts
+│   └── check_llm_nits.py # LLM anti-pattern detection
 ├── system-prompts/      # Project-specific patterns
 │   ├── AGENTS.md       # Root-level agent guidance
 │   └── testing/        # Testing-specific patterns
@@ -45,6 +47,7 @@ After adding as a submodule, create symlinks to enable the agents/commands/skill
 
 This will:
 - Link `.claude/` configurations to your project root (symlinks `dot-claude/` → `.claude/`)
+- Link `.pre-commit-scripts/` for code quality checks (symlinks `pre-commit-scripts/` → `.pre-commit-scripts/`)
 - Create symlinks for AGENTS.md files in appropriate locations
 - Install Node.js dependencies for skills that require them (playwright-tester, etc.)
 - Preserve existing project-specific customizations
@@ -68,6 +71,7 @@ Once installed:
 2. **Commands**: Use slash commands like `/buildit`, `/planit`, `/review-code`
 3. **Skills**: Invoke skills like `docker-log-debugger`, `langfuse-prompt-viewer`, `playwright-tester`
 4. **Patterns**: Referenced automatically via symlinked AGENTS.md files
+5. **Pre-commit Scripts**: LLM anti-pattern detection runs during linting
 
 ## Updating
 
