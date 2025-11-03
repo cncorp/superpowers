@@ -1,15 +1,15 @@
 ---
 name: langfuse-prompt-viewer
-description: Fetch and view Langfuse prompts. Use when debugging KeyError/schema errors, understanding prompt schemas, or when user requests to view a prompt.
+description: Fetch and view Langfuse prompts and traces. Use when debugging KeyError/schema errors, understanding prompt schemas, viewing traces, or when user requests to view a prompt.
 allowed-tools:
   - Bash
   - Read
   - Glob
 ---
 
-# Langfuse Prompt Viewer
+# Langfuse Prompt & Trace Viewer
 
-Fetch and view prompts from Langfuse to understand their content, schema, and configuration.
+Comprehensive skill for working with Langfuse prompts and traces. Includes scripts for fetching prompts, viewing traces, and caching prompt content.
 
 ## When to Use
 
@@ -19,37 +19,77 @@ Fetch and view prompts from Langfuse to understand their content, schema, and co
 - Code references a prompt and you need to see its logic
 - User asks to view a specific prompt
 - Investigating why prompt response doesn't match expectations
+- Debugging Langfuse traces
+- Analyzing AI model behavior in production
 
 **Example:** `KeyError: 'therapist_response'` → Fetch `voice_message_enricher` to see actual schema
 
-## Fetch Commands
+## Available Scripts
 
+### 1. refresh_prompt_cache.py - Download Prompts Locally
+
+Downloads Langfuse prompts to `docs/cached_prompts/` for offline viewing.
+
+**Usage:**
 ```bash
-# Fetch specific prompt (from api directory)
-cd api && \
-set -a; source .env; set +a; \
-PYTHONPATH=src uv run python src/cli/refresh_prompt_cache.py PROMPT_NAME
+# Fetch specific prompt (from project root or api directory)
+cd api && set -a; source .env; set +a; PYTHONPATH=src uv run python .claude/skills/langfuse-prompt-viewer/refresh_prompt_cache.py PROMPT_NAME
 
 # Fetch all prompts
-cd api && \
-set -a; source .env; set +a; \
-PYTHONPATH=src uv run python src/cli/refresh_prompt_cache.py
+cd api && set -a; source .env; set +a; PYTHONPATH=src uv run python .claude/skills/langfuse-prompt-viewer/refresh_prompt_cache.py
 
 # Fetch multiple prompts
-cd api && \
-set -a; source .env; set +a; \
-PYTHONPATH=src uv run python src/cli/refresh_prompt_cache.py prompt1 prompt2 prompt3
+cd api && set -a; source .env; set +a; PYTHONPATH=src uv run python .claude/skills/langfuse-prompt-viewer/refresh_prompt_cache.py prompt1 prompt2 prompt3
+
+# Or use justfile command (if available)
+cd api && just refresh-prompts PROMPT_NAME
 ```
 
-## Cached Location
+**Cached Location:**
+- `docs/cached_prompts/{prompt_name}_production.txt` - Prompt content + version
+- `docs/cached_prompts/{prompt_name}_production_config.json` - Configuration
 
-Prompts saved to: `docs/cached_prompts/`
+### 2. check_prompts.py - List Available Prompts
 
-Files created:
-- `{prompt_name}_production.txt` - Prompt content + version
-- `{prompt_name}_production_config.json` - Configuration
+Lists all prompts available in Langfuse without downloading them.
 
-## Key Prompts
+**Usage:**
+```bash
+cd api && set -a; source .env; set +a; PYTHONPATH=src uv run python .claude/skills/langfuse-prompt-viewer/check_prompts.py
+```
+
+**Output:**
+- Lists all prompt names in Langfuse
+- Shows which prompts are available
+- Useful for discovering prompt names before fetching
+
+### 3. fetch_trace.py - View Langfuse Traces
+
+Fetch and display Langfuse traces for debugging AI model behavior.
+
+**Usage:**
+```bash
+# Fetch specific trace by ID
+cd api && set -a; source .env; set +a; PYTHONPATH=src uv run python .claude/skills/langfuse-prompt-viewer/fetch_trace.py db29520b-9acb-4af9-a7a0-1aa005eb7b24
+
+# Fetch trace from Langfuse URL
+cd api && set -a; source .env; set +a; PYTHONPATH=src uv run python .claude/skills/langfuse-prompt-viewer/fetch_trace.py "https://langfuse.prod.cncorp.io/project/.../traces?peek=db29520b..."
+
+# List recent traces
+cd api && set -a; source .env; set +a; PYTHONPATH=src uv run python .claude/skills/langfuse-prompt-viewer/fetch_trace.py --list --limit 5
+
+# View help
+cd api && set -a; source .env; set +a; PYTHONPATH=src uv run python .claude/skills/langfuse-prompt-viewer/fetch_trace.py --help
+```
+
+**What it shows:**
+- Trace ID and metadata
+- All observations (LLM calls, tool uses, etc.)
+- Input/output for each step
+- Timing information
+- Useful for debugging AI workflows
+
+## Key Prompts Reference
 
 ### Core Processing
 - `message_enricher` - 🔥 Most critical - analyzes affect, conflict_state, intervention_needed
@@ -74,7 +114,7 @@ Files created:
 - `voice_conflict_intro` - Voice conflict intro
 - `voice_guidance_delivery` - Voice guidance delivery
 
-## Understanding Configs
+## Understanding Prompt Configs
 
 ### Prompt Text File
 - Instructions: What AI should do
@@ -104,7 +144,7 @@ Files created:
 ## Debugging Workflows
 
 ### KeyError in Tests
-1. Fetch the prompt
+1. Fetch the prompt using `refresh_prompt_cache.py`
 2. Check if field is optional/conditional in prompt text
 3. Check config: `json_object` vs `json_schema`
 4. Fix test to handle optional field OR update prompt
@@ -113,25 +153,62 @@ Files created:
 1. Fetch `message_enricher` to see `intervention_needed` values
 2. Fetch `group_message_intervention_conditions_yaml` for SQL conditions
 3. Verify enrichment result matches conditions
+4. Check trace with `fetch_trace.py` to see actual flow
 
 ### Schema Validation Fails
-1. Fetch the prompt
+1. Fetch the prompt using `refresh_prompt_cache.py`
 2. Read config's `json_schema` section
 3. Check `required` array
 4. Verify code provides all required parameters
 
+### Understanding AI Behavior
+1. Get trace ID from logs or Langfuse UI
+2. Use `fetch_trace.py` to view full trace
+3. Examine inputs, outputs, and intermediate steps
+4. Check for unexpected model responses
+
+## Environment Requirements
+
+**Required environment variables:**
+- `LANGFUSE_PUBLIC_KEY` - Langfuse API public key
+- `LANGFUSE_SECRET_KEY` - Langfuse API secret key
+- `LANGFUSE_HOST` - Langfuse instance URL (optional, defaults to cloud)
+
+**How to set:**
+```bash
+# Load from .env file
+cd api && set -a; source .env; set +a
+```
+
 ## Quick Reference
 
 ```bash
-# List cached prompts
-ls -1 docs/cached_prompts/*_production.txt | xargs -n1 basename | sed 's/_production.txt$//'
+# List all available prompts
+cd api && set -a; source .env; set +a; PYTHONPATH=src uv run python .claude/skills/langfuse-prompt-viewer/check_prompts.py
 
-# Fetch prompt
-cd api && set -a; source .env; set +a; PYTHONPATH=src uv run python src/cli/refresh_prompt_cache.py PROMPT_NAME
+# Fetch specific prompt
+cd api && set -a; source .env; set +a; PYTHONPATH=src uv run python .claude/skills/langfuse-prompt-viewer/refresh_prompt_cache.py PROMPT_NAME
 
-# Read prompt
+# View cached prompt
 cat docs/cached_prompts/PROMPT_NAME_production.txt
 cat docs/cached_prompts/PROMPT_NAME_production_config.json
+
+# List recent traces
+cd api && set -a; source .env; set +a; PYTHONPATH=src uv run python .claude/skills/langfuse-prompt-viewer/fetch_trace.py --list --limit 5
+
+# Fetch specific trace
+cd api && set -a; source .env; set +a; PYTHONPATH=src uv run python .claude/skills/langfuse-prompt-viewer/fetch_trace.py TRACE_ID
 ```
 
-**Note:** This is READ-ONLY. Never modify Langfuse prompts directly.
+## Important Notes
+
+**READ-ONLY Operations:**
+- These scripts are for viewing and debugging only
+- DO NOT use to modify or delete prompts in Langfuse
+- DO NOT push changes to Langfuse
+- Always verify you're looking at the correct environment
+
+**Project Structure:**
+- Scripts expect to run from project `api/` directory
+- Scripts use project's `common.langfuse_client` and `logger` modules
+- Cached prompts saved to `docs/cached_prompts/` relative to project root
