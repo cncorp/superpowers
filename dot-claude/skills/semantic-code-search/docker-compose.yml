@@ -1,42 +1,4 @@
-version: '3.8'
+# DEPRECATED: This skill now uses centralized Docker Compose
+# Run from superpowers root instead: cd ../../.. && docker-compose up -d
 
-services:
-  postgres:
-    image: pgvector/pgvector:pg16
-    container_name: code-search-db
-    environment:
-      POSTGRES_DB: codesearch
-      POSTGRES_USER: codesearch
-      POSTGRES_PASSWORD: codesearch  # pragma: allowlist secret
-      POSTGRES_HOST_AUTH_METHOD: trust
-    volumes:
-      - code-search-postgres-data:/var/lib/postgresql/data
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
-    ports:
-      - "5433:5432"  # Different port to avoid conflicts
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U codesearch -d codesearch"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
-  app:
-    build: .
-    container_name: code-search-cli
-    depends_on:
-      postgres:
-        condition: service_healthy
-    environment:
-      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
-      DATABASE_URL: postgresql://codesearch:codesearch@postgres:5432/codesearch  # pragma: allowlist secret
-      PROJECT_ROOT: /project
-    volumes:
-      # Mount skill source code to /app
-      - ./src:/app/src:ro
-      # Mount project root - use absolute path to avoid symlink issues
-      - /home/odio/Hacking/codel/ct4:/project:ro
-    working_dir: /project
-    command: tail -f /dev/null
-
-volumes:
-  code-search-postgres-data:
+# This file kept for reference only. Use ../../../docker-compose.yml instead.

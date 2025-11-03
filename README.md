@@ -2,6 +2,42 @@
 
 Reusable Claude Code agents, commands, skills, and patterns for your projects.
 
+## Quick Start
+
+1. **Copy environment template**:
+   ```bash
+   cp .env.example .env
+   # Edit .env and add your OPENAI_API_KEY
+   ```
+
+2. **Start all skill containers** (optional, for Docker-based skills):
+   ```bash
+   docker-compose up -d
+   ```
+
+3. **Verify skills are running**:
+   ```bash
+   docker ps | grep superpowers
+   ```
+
+## Environment Setup
+
+Skills that require API keys (like semantic-code-search) use a shared `.env` file at the superpowers root:
+
+```bash
+# Copy template
+cp .env.example .env
+
+# Add your API keys
+echo "OPENAI_API_KEY=sk-proj-your-key" >> .env
+```
+
+Alternatively, export from your shell environment:
+```bash
+export OPENAI_API_KEY=$(grep OPENAI_API_KEY ../api/.env | cut -d '=' -f2)
+docker-compose up -d
+```
+
 ## Structure
 
 ```
