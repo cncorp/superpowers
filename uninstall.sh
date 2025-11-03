@@ -21,6 +21,14 @@ else
     echo "  ! No .claude symlink found"
 fi
 
+# Remove .pre-commit-scripts symlink
+if [ -L "$PROJECT_ROOT/.pre-commit-scripts" ]; then
+    rm "$PROJECT_ROOT/.pre-commit-scripts"
+    echo -e "${GREEN}✓ Removed .pre-commit-scripts symlink${NC}"
+else
+    echo "  ! No .pre-commit-scripts symlink found"
+fi
+
 # Remove AGENTS.md symlinks
 if [ -L "$PROJECT_ROOT/AGENTS.md" ]; then
     rm "$PROJECT_ROOT/AGENTS.md"
