@@ -7,41 +7,41 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-echo -e "${YELLOW}Uninstalling Superpowers symlinks from ct3...${NC}\n"
+echo -e "${YELLOW}Uninstalling Superpowers symlinks...${NC}\n"
 
 # Get the directory where this script lives
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-CT3_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 # Remove .claude symlink
-if [ -L "$CT3_ROOT/.claude" ]; then
-    rm "$CT3_ROOT/.claude"
+if [ -L "$PROJECT_ROOT/.claude" ]; then
+    rm "$PROJECT_ROOT/.claude"
     echo -e "${GREEN}✓ Removed .claude symlink${NC}"
 else
     echo "  ! No .claude symlink found"
 fi
 
 # Remove AGENTS.md symlinks
-if [ -L "$CT3_ROOT/AGENTS.md" ]; then
-    rm "$CT3_ROOT/AGENTS.md"
+if [ -L "$PROJECT_ROOT/AGENTS.md" ]; then
+    rm "$PROJECT_ROOT/AGENTS.md"
     echo -e "${GREEN}✓ Removed root AGENTS.md symlink${NC}"
 
     # Restore backup if it exists
-    if [ -f "$CT3_ROOT/AGENTS.md.backup" ]; then
-        mv "$CT3_ROOT/AGENTS.md.backup" "$CT3_ROOT/AGENTS.md"
+    if [ -f "$PROJECT_ROOT/AGENTS.md.backup" ]; then
+        mv "$PROJECT_ROOT/AGENTS.md.backup" "$PROJECT_ROOT/AGENTS.md"
         echo -e "${GREEN}✓ Restored AGENTS.md from backup${NC}"
     fi
 else
     echo "  ! No root AGENTS.md symlink found"
 fi
 
-if [ -L "$CT3_ROOT/api/tests/AGENTS.md" ]; then
-    rm "$CT3_ROOT/api/tests/AGENTS.md"
+if [ -L "$PROJECT_ROOT/api/tests/AGENTS.md" ]; then
+    rm "$PROJECT_ROOT/api/tests/AGENTS.md"
     echo -e "${GREEN}✓ Removed testing AGENTS.md symlink${NC}"
 
     # Restore backup if it exists
-    if [ -f "$CT3_ROOT/api/tests/AGENTS.md.backup" ]; then
-        mv "$CT3_ROOT/api/tests/AGENTS.md.backup" "$CT3_ROOT/api/tests/AGENTS.md"
+    if [ -f "$PROJECT_ROOT/api/tests/AGENTS.md.backup" ]; then
+        mv "$PROJECT_ROOT/api/tests/AGENTS.md.backup" "$PROJECT_ROOT/api/tests/AGENTS.md"
         echo -e "${GREEN}✓ Restored testing AGENTS.md from backup${NC}"
     fi
 else

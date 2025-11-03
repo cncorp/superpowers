@@ -1,6 +1,6 @@
 # Superpowers
 
-Reusable Claude Code agents, commands, skills, and patterns for ct3 and other projects.
+Reusable Claude Code agents, commands, skills, and patterns for your projects.
 
 ## Structure
 
@@ -28,18 +28,18 @@ From your project root:
 
 ```bash
 # Add as submodule
-git submodule add <your-superpowers-repo-url> superpowers
+git submodule add git@github.com:cncorp/superpowers.git superpowers
 
 # Initialize and update
 git submodule update --init --recursive
 ```
 
-### Linking to ct3
+### Linking to Your Project
 
-After adding as a submodule, create symlinks from ct3 to superpowers:
+After adding as a submodule, create symlinks to enable the agents/commands/skills:
 
 ```bash
-# From ct3 root directory
+# From your project root directory
 ./superpowers/install.sh
 ```
 
@@ -47,7 +47,7 @@ This will:
 - Link `.claude/` configurations to your project root (symlinks `dot-claude/` → `.claude/`)
 - Create symlinks for AGENTS.md files in appropriate locations
 - Install Node.js dependencies for skills that require them (playwright-tester, etc.)
-- Preserve existing ct3-specific customizations
+- Preserve existing project-specific customizations
 
 ### Prerequisites
 
@@ -91,9 +91,9 @@ After updating, re-run the install script if new skills were added:
 When updating patterns or configurations:
 
 1. Make changes in `superpowers/` directory
-2. Test in ct3 (changes reflect via symlinks)
+2. Test in your project (changes reflect via symlinks)
 3. Commit and push to superpowers repo
-4. Update submodule reference in ct3
+4. Update submodule reference in your project
 
 ## Skills with Node.js Dependencies
 

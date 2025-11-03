@@ -7,20 +7,20 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-echo -e "${GREEN}Installing Superpowers for ct3...${NC}\n"
+echo -e "${GREEN}Installing Superpowers...${NC}\n"
 
 # Get the directory where this script lives
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SUPERPOWERS_DIR="$SCRIPT_DIR"
-CT3_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 echo "Superpowers directory: $SUPERPOWERS_DIR"
-echo "ct3 root directory: $CT3_ROOT"
+echo "Project root directory: $PROJECT_ROOT"
 echo ""
 
 # 1. Link .claude directory to project root (Claude Code expects it there)
 echo -e "${YELLOW}Step 1: Linking .claude directory...${NC}"
-CLAUDE_LINK="$CT3_ROOT/.claude"
+CLAUDE_LINK="$PROJECT_ROOT/.claude"
 
 if [ -L "$CLAUDE_LINK" ]; then
     echo "  ✓ .claude symlink already exists"
@@ -37,7 +37,7 @@ fi
 echo -e "\n${YELLOW}Step 2: Linking AGENTS.md files...${NC}"
 
 # Root AGENTS.md
-ROOT_AGENTS="$CT3_ROOT/AGENTS.md"
+ROOT_AGENTS="$PROJECT_ROOT/AGENTS.md"
 if [ -L "$ROOT_AGENTS" ]; then
     echo "  ✓ Root AGENTS.md symlink already exists"
 elif [ -f "$ROOT_AGENTS" ]; then
@@ -51,7 +51,7 @@ else
 fi
 
 # Testing AGENTS.md
-TESTING_AGENTS="$CT3_ROOT/api/tests/AGENTS.md"
+TESTING_AGENTS="$PROJECT_ROOT/api/tests/AGENTS.md"
 if [ -L "$TESTING_AGENTS" ]; then
     echo "  ✓ Testing AGENTS.md symlink already exists"
 elif [ -f "$TESTING_AGENTS" ]; then
@@ -92,7 +92,7 @@ fi
 
 # 4. Update CLAUDE.md to point to the new structure
 echo -e "\n${YELLOW}Step 4: Updating CLAUDE.md redirect...${NC}"
-CLAUDE_MD="$CT3_ROOT/CLAUDE.md"
+CLAUDE_MD="$PROJECT_ROOT/CLAUDE.md"
 
 cat > "$CLAUDE_MD" << 'CLAUDEMD'
 # CLAUDE.md
@@ -124,8 +124,8 @@ echo -e "${GREEN}  ✓ Updated CLAUDE.md${NC}"
 echo -e "\n${GREEN}✓ Installation complete!${NC}"
 echo ""
 echo "The following symlinks have been created:"
-echo "  - $CT3_ROOT/.claude -> $SUPERPOWERS_DIR/dot-claude"
-echo "  - $CT3_ROOT/AGENTS.md -> $SUPERPOWERS_DIR/system-prompts/AGENTS.md"
-echo "  - $CT3_ROOT/api/tests/AGENTS.md -> $SUPERPOWERS_DIR/system-prompts/testing/AGENTS.md"
+echo "  - $PROJECT_ROOT/.claude -> $SUPERPOWERS_DIR/dot-claude"
+echo "  - $PROJECT_ROOT/AGENTS.md -> $SUPERPOWERS_DIR/system-prompts/AGENTS.md"
+echo "  - $PROJECT_ROOT/api/tests/AGENTS.md -> $SUPERPOWERS_DIR/system-prompts/testing/AGENTS.md"
 echo ""
-echo "To update patterns, edit files in superpowers/ and they will automatically reflect in ct3."
+echo "To update patterns, edit files in superpowers/ and they will automatically reflect in your project."
