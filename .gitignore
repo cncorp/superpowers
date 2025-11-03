@@ -22,3 +22,6 @@ Thumbs.db
 # Logs
 *.log
 npm-debug.log*
+
+# Project-specific settings (each project has its own)
+dot-claude/settings.local.json
