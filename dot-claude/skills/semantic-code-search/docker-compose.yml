@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: code-search-db
+    environment:
+      POSTGRES_DB: codesearch
+      POSTGRES_USER: codesearch
+      POSTGRES_PASSWORD: codesearch  # pragma: allowlist secret
+      POSTGRES_HOST_AUTH_METHOD: trust
+    volumes:
+      - code-search-postgres-data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5433:5432"  # Different port to avoid conflicts
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U codesearch -d codesearch"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build: .
+    container_name: code-search-cli
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      DATABASE_URL: postgresql://codesearch:codesearch@postgres:5432/codesearch  # pragma: allowlist secret
+    volumes:
+      # Mount project root (3 levels up from skill directory)
+      # .claude/skills/semantic-code-search -> project root
+      - ../../..:/workspace:ro
+    working_dir: /workspace
+    command: tail -f /dev/null
+
+volumes:
+  code-search-postgres-data:
