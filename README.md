@@ -99,15 +99,74 @@ For skills requiring Node.js (like playwright-tester):
   npm install
   ```
 
-## Usage
+## What You Get
 
-Once installed:
+### 🤖 Specialized Agents (Auto-invoked)
+Claude Code automatically uses these agents when appropriate:
 
-1. **Agents**: Available automatically in Claude Code (e.g., mypy-error-fixer, pytest-test-reviewer)
-2. **Commands**: Use slash commands like `/buildit`, `/planit`, `/review-code`
-3. **Skills**: Invoke skills like `docker-log-debugger`, `langfuse-prompt-viewer`, `playwright-tester`
-4. **Patterns**: Referenced automatically via symlinked AGENTS.md files
-5. **Pre-commit Scripts**: LLM anti-pattern detection runs during linting
+- **`pytest-test-reviewer`** - Reviews test code for quality, parametrization, and best practices
+- **`test-fixture-reviewer`** - Refactors test fixtures to follow patterns
+- **`mypy-error-fixer`** - Automatically fixes type errors
+- **`task-complete-enforcer`** - Ensures tasks meet Definition of Done before marking complete
+
+### 📋 Slash Commands
+Invoke with `/command-name` in Claude Code:
+
+**Planning & Implementation:**
+- `/planit` - Create detailed implementation plans
+- `/buildit` - Implement the next stage in your plan
+- `/plan-tdd` - Create TDD-based implementation plans
+- `/implement-tdd` - Implement using Test-Driven Development
+
+**Code Quality:**
+- `/review-code` - Review code changes for quality and patterns
+- `/prreview` - Review pull requests comprehensively
+- `/mypy` - Run and fix mypy type errors
+
+**Research & Exploration:**
+- `/research` - Research codebase features or topics
+- `/wdyt` - "What do you think?" - get opinions on implementation approaches
+
+**Quick Actions:**
+- `/cyw` - "Code your way" - implement with minimal guidance
+- `/yjd` - "You just do" - quick implementation without discussion
+- `/prime` - Prime context for a task
+
+**Project Management:**
+- `/create-linear-ticket` - Create Linear tickets from tasks
+- `/linear-agent` - Work with Linear issues
+
+### 🎯 Skills (Specialized Tools)
+
+**Semantic Code Search:**
+```bash
+# Start the skill
+cd superpowers && docker-compose up -d
+
+# Find code by meaning, not text
+docker exec superpowers-semantic-search-cli python /app/src/cli.py find "authentication logic"
+docker exec superpowers-semantic-search-cli python /app/src/cli.py find "send message to user"
+```
+
+**Langfuse Prompt Viewer:**
+- View and debug Langfuse prompts and traces
+- Understand prompt schemas when KeyError occurs
+- Analyze AI model behavior in production
+
+**Other Skills:**
+- **`playwright-tester`** - Browser automation testing
+- **`docker-log-debugger`** - Debug container logs
+- **`test-runner`** - Run and manage test suites
+- **`twilio-test-caller`** - Test Twilio voice integrations
+
+### 📚 System Prompts
+Automatically loaded guidance for AI agents:
+- **`AGENTS.md`** - Root-level coding patterns, anti-patterns, and quality standards
+- **`api/tests/AGENTS.md`** - Testing patterns, fixture guidelines, and test types
+
+### 🔍 Pre-commit Scripts
+Automatic code quality checks:
+- **`check_llm_nits.py`** - Detects LLM anti-patterns (broad exceptions, late imports, single-use functions)
 
 ## Updating
 
