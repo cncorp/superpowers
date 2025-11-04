@@ -105,8 +105,53 @@ else
     fi
 fi
 
-# 5. Setup semantic code search skill
-echo -e "\n${YELLOW}Step 5: Setting up semantic code search skill...${NC}"
+# 5. Setup superpowers environment configuration
+echo -e "\n${YELLOW}Step 5: Setting up superpowers environment configuration...${NC}"
+
+SUPERPOWERS_ENV="$SUPERPOWERS_DIR/.env"
+SUPERPOWERS_ENV_EXAMPLE="$SUPERPOWERS_DIR/.env.example"
+
+if [ -f "$SUPERPOWERS_ENV" ]; then
+    echo -e "${GREEN}  ✓ .env file already exists${NC}"
+else
+    # Check if OpenAI API key is in environment or parent project
+    PARENT_API_KEY=""
+    if [ -f "$PROJECT_ROOT/api/.env" ]; then
+        PARENT_API_KEY=$(grep "^OPENAI_API_KEY=" "$PROJECT_ROOT/api/.env" | head -1 | cut -d'=' -f2 | tr -d ' ')
+    fi
+
+    if [ -n "$OPENAI_API_KEY" ]; then
+        echo "  Using OPENAI_API_KEY from environment"
+        cp "$SUPERPOWERS_ENV_EXAMPLE" "$SUPERPOWERS_ENV"
+        sed -i "s|OPENAI_API_KEY=.*|OPENAI_API_KEY=$OPENAI_API_KEY|" "$SUPERPOWERS_ENV"
+        echo -e "${GREEN}  ✓ Created .env with API key from environment${NC}"
+    elif [ -n "$PARENT_API_KEY" ]; then
+        echo "  Found OPENAI_API_KEY in parent project (api/.env)"
+        read -p "  Use this key for superpowers? [Y/n]: " -n 1 -r
+        echo
+        if [[ ! $REPLY =~ ^[Nn]$ ]]; then
+            cp "$SUPERPOWERS_ENV_EXAMPLE" "$SUPERPOWERS_ENV"
+            sed -i "s|OPENAI_API_KEY=.*|OPENAI_API_KEY=$PARENT_API_KEY|" "$SUPERPOWERS_ENV"
+            echo -e "${GREEN}  ✓ Created .env with API key from parent project${NC}"
+        else
+            cp "$SUPERPOWERS_ENV_EXAMPLE" "$SUPERPOWERS_ENV"
+            echo -e "${YELLOW}  ! Created .env template - edit it to add your OpenAI API key${NC}"
+        fi
+    else
+        read -p "  Enter OpenAI API key (or press Enter to skip): " API_KEY
+        if [ -n "$API_KEY" ]; then
+            cp "$SUPERPOWERS_ENV_EXAMPLE" "$SUPERPOWERS_ENV"
+            sed -i "s|OPENAI_API_KEY=.*|OPENAI_API_KEY=$API_KEY|" "$SUPERPOWERS_ENV"
+            echo -e "${GREEN}  ✓ Created .env with provided API key${NC}"
+        else
+            cp "$SUPERPOWERS_ENV_EXAMPLE" "$SUPERPOWERS_ENV"
+            echo -e "${YELLOW}  ! Created .env template - edit it to add your OpenAI API key${NC}"
+        fi
+    fi
+fi
+
+# 6. Setup semantic code search skill
+echo -e "\n${YELLOW}Step 6: Setting up semantic code search skill...${NC}"
 
 CODE_SEARCH_DIR="$SUPERPOWERS_DIR/dot-claude/skills/semantic-code-search"
 if [ -d "$CODE_SEARCH_DIR" ]; then
@@ -116,31 +161,23 @@ if [ -d "$CODE_SEARCH_DIR" ]; then
     if ! command -v docker &> /dev/null; then
         echo -e "${YELLOW}  ! Docker not found - skipping semantic code search setup${NC}"
         echo "    To use semantic code search later, install Docker and run:"
-        echo "    cd .claude/skills/semantic-code-search && docker-compose up -d"
+        echo "    cd superpowers && docker-compose up -d"
     else
         # Check if containers are already running
-        if docker ps | grep -q code-search-cli; then
+        if docker ps | grep -q superpowers-semantic-search-cli; then
             echo -e "${GREEN}  ✓ Semantic code search containers already running${NC}"
         else
-            read -p "  Setup semantic code search? (requires OpenAI API key) [y/N]: " -n 1 -r
-            echo
-            if [[ $REPLY =~ ^[Yy]$ ]]; then
-                # Check for OpenAI API key
-                if [ -z "$OPENAI_API_KEY" ]; then
-                    echo -e "${YELLOW}  ! OPENAI_API_KEY not set in environment${NC}"
-                    read -p "    Enter OpenAI API key (or press Enter to skip): " API_KEY
-                    if [ -n "$API_KEY" ]; then
-                        export OPENAI_API_KEY="$API_KEY"
-                        echo "OPENAI_API_KEY=$API_KEY" > "$CODE_SEARCH_DIR/.env"
-                    else
-                        echo -e "${YELLOW}    Skipping semantic code search setup${NC}"
-                        echo "    To set up later: export OPENAI_API_KEY=xxx && cd .claude/skills/semantic-code-search && docker-compose up -d"
-                    fi
-                fi
-
-                if [ -n "$OPENAI_API_KEY" ]; then
+            # Check if OpenAI API key is configured
+            if [ ! -f "$SUPERPOWERS_ENV" ] || ! grep -q "^OPENAI_API_KEY=sk-" "$SUPERPOWERS_ENV"; then
+                echo -e "${YELLOW}  ! OPENAI_API_KEY not configured in $SUPERPOWERS_ENV${NC}"
+                echo "    Edit superpowers/.env to add your key, then run:"
+                echo "    cd superpowers && docker-compose up -d"
+            else
+                read -p "  Start semantic code search containers? [y/N]: " -n 1 -r
+                echo
+                if [[ $REPLY =~ ^[Yy]$ ]]; then
                     echo "  Starting semantic code search containers..."
-                    cd "$CODE_SEARCH_DIR"
+                    cd "$SUPERPOWERS_DIR"
 
                     # Start containers
                     docker-compose up -d --build 2>&1 | grep -v "Pulling" | grep -v "Waiting"
@@ -151,7 +188,7 @@ if [ -d "$CODE_SEARCH_DIR" ]; then
                         # Wait for postgres to be healthy
                         echo "    Waiting for database to be ready..."
                         for i in {1..30}; do
-                            if docker exec code-search-cli psql postgresql://codesearch:codesearch@postgres:5432/codesearch -c "SELECT 1" &> /dev/null; then
+                            if docker exec superpowers-semantic-search-cli psql postgresql://codesearch:codesearch@semantic-search-db:5432/codesearch -c "SELECT 1" &> /dev/null; then
                                 break
                             fi
                             sleep 1
@@ -159,27 +196,27 @@ if [ -d "$CODE_SEARCH_DIR" ]; then
 
                         # Index the project root
                         echo "    Indexing codebase (this may take a minute)..."
-                        docker exec code-search-cli code-search index /workspace --clear 2>&1 | tail -5
+                        docker exec superpowers-semantic-search-cli code-search index /project --clear 2>&1 | tail -5
 
                         if [ $? -eq 0 ]; then
                             echo -e "${GREEN}    ✓ Indexed codebase${NC}"
 
                             # Show stats
                             echo ""
-                            docker exec code-search-cli code-search stats
+                            docker exec superpowers-semantic-search-cli code-search stats
                         else
                             echo -e "${RED}    ✗ Failed to index codebase${NC}"
-                            echo "    Try manually: docker exec code-search-cli code-search index /workspace --clear"
+                            echo "    Try manually: docker exec superpowers-semantic-search-cli code-search index /project --clear"
                         fi
                     else
                         echo -e "${RED}    ✗ Failed to start semantic code search containers${NC}"
                     fi
 
                     cd "$PROJECT_ROOT"
+                else
+                    echo "  Skipped semantic code search startup"
+                    echo "  To start later: cd superpowers && docker-compose up -d"
                 fi
-            else
-                echo "  Skipped semantic code search setup"
-                echo "  To set up later: cd .claude/skills/semantic-code-search && docker-compose up -d"
             fi
         fi
     fi
@@ -187,52 +224,47 @@ else
     echo -e "${YELLOW}  ! Semantic code search skill not found - skipping${NC}"
 fi
 
-# 6. Update CLAUDE.md to point to the new structure
-echo -e "\n${YELLOW}Step 6: Updating CLAUDE.md redirect...${NC}"
+# 7. Link CLAUDE.md
+echo -e "\n${YELLOW}Step 7: Linking CLAUDE.md...${NC}"
 CLAUDE_MD="$PROJECT_ROOT/CLAUDE.md"
 
-cat > "$CLAUDE_MD" << 'CLAUDEMD'
-# CLAUDE.md
-
-This repository now consolidates all assistant guidance under `AGENTS.md` files managed by the superpowers submodule. Use the list below to jump to the right doc:
-
-- `AGENTS.md` — top-level rules for every AI coding agent (symlinked from superpowers/system-prompts/AGENTS.md)
-- `api/tests/AGENTS.md` — testing strategy, fixtures, and patterns for agents (symlinked from superpowers/system-prompts/testing/AGENTS.md)
-
-Keep these files in sync by updating them in the `superpowers/` submodule.
-
-# Command Restrictions
-
-- Never run any `git` commands yourself. If you need repository state (diffs, status, history), describe the command and ask the user to execute it and share the output.
-
-# When to Answer vs When to Code
-
-**DEFAULT TO ANSWERING, NOT CODING.** Only write code when explicitly asked with phrases like "make that change" or "go ahead and fix it."
-
-DO NOT jump to fixing bugs when the user is:
-- Asking questions (even about errors or problems)
-- Discussing or analyzing behavior
-- Using question marks
-- Saying things like "should we", "could we", "would it be better"
-CLAUDEMD
-
-echo -e "${GREEN}  ✓ Updated CLAUDE.md${NC}"
+if [ -L "$CLAUDE_MD" ]; then
+    echo "  ✓ CLAUDE.md symlink already exists"
+elif [ -f "$CLAUDE_MD" ]; then
+    echo "  ! Backing up existing $CLAUDE_MD to ${CLAUDE_MD}.bak"
+    mv "$CLAUDE_MD" "${CLAUDE_MD}.bak"
+    ln -s "$SUPERPOWERS_DIR/system-prompts/CLAUDE.md" "$CLAUDE_MD"
+    echo -e "${GREEN}  ✓ Created CLAUDE.md symlink${NC}"
+else
+    ln -s "$SUPERPOWERS_DIR/system-prompts/CLAUDE.md" "$CLAUDE_MD"
+    echo -e "${GREEN}  ✓ Created CLAUDE.md symlink${NC}"
+fi
 
 echo -e "\n${GREEN}✓ Installation complete!${NC}"
 echo ""
 echo "The following symlinks have been created:"
 echo "  - $PROJECT_ROOT/.claude -> $SUPERPOWERS_DIR/dot-claude"
 echo "  - $PROJECT_ROOT/.pre-commit-scripts -> $SUPERPOWERS_DIR/pre-commit-scripts"
+echo "  - $PROJECT_ROOT/CLAUDE.md -> $SUPERPOWERS_DIR/system-prompts/CLAUDE.md"
 echo "  - $PROJECT_ROOT/AGENTS.md -> $SUPERPOWERS_DIR/system-prompts/AGENTS.md"
 echo "  - $PROJECT_ROOT/api/tests/AGENTS.md -> $SUPERPOWERS_DIR/system-prompts/testing/AGENTS.md"
 echo ""
 
+# Check if .env was created
+if [ -f "$SUPERPOWERS_ENV" ]; then
+    echo -e "${GREEN}Environment configuration:${NC}"
+    echo "  - superpowers/.env (edit this file to configure API keys)"
+    echo ""
+fi
+
 # Check if semantic code search was set up
-if docker ps | grep -q code-search-cli; then
+if docker ps | grep -q superpowers-semantic-search-cli; then
     echo -e "${GREEN}Semantic code search is ready!${NC}"
-    echo "  Usage: docker exec code-search-cli code-search find \"your search query\""
-    echo "  Stats: docker exec code-search-cli code-search stats"
+    echo "  Usage: docker exec superpowers-semantic-search-cli code-search find \"your search query\""
+    echo "  Stats: docker exec superpowers-semantic-search-cli code-search stats"
+    echo "  Reindex: docker exec superpowers-semantic-search-cli code-search index /project --clear"
     echo ""
 fi
 
 echo "To update patterns, edit files in superpowers/ and they will automatically reflect in your project."
+echo "To manage superpowers services: cd superpowers && docker-compose up -d"

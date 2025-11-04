@@ -29,6 +29,20 @@ else
     echo "  ! No .pre-commit-scripts symlink found"
 fi
 
+# Remove CLAUDE.md symlink
+if [ -L "$PROJECT_ROOT/CLAUDE.md" ]; then
+    rm "$PROJECT_ROOT/CLAUDE.md"
+    echo -e "${GREEN}✓ Removed CLAUDE.md symlink${NC}"
+
+    # Restore backup if it exists
+    if [ -f "$PROJECT_ROOT/CLAUDE.md.bak" ]; then
+        mv "$PROJECT_ROOT/CLAUDE.md.bak" "$PROJECT_ROOT/CLAUDE.md"
+        echo -e "${GREEN}✓ Restored CLAUDE.md from backup${NC}"
+    fi
+else
+    echo "  ! No CLAUDE.md symlink found"
+fi
+
 # Remove AGENTS.md symlinks
 if [ -L "$PROJECT_ROOT/AGENTS.md" ]; then
     rm "$PROJECT_ROOT/AGENTS.md"
