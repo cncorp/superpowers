@@ -44,12 +44,8 @@ def get_langfuse() -> Langfuse | None:
             print("\nLoad them with: set -a; source superpowers/.env; set +a")
             return None
 
-        return Langfuse(
-            public_key=public_key,
-            secret_key=secret_key,
-            host=host
-        )
-    except Exception as e:
+        return Langfuse(public_key=public_key, secret_key=secret_key, host=host)
+    except Exception as e:  # noqa: BLE001 - CLI tool: catch all for user-friendly error message
         print(f"ERROR: Failed to initialize Langfuse client: {e}")
         return None
 
@@ -77,14 +73,14 @@ def get_all_prompts(langfuse: Langfuse) -> list[str]:
                     break
 
             page += 1
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001 - CLI tool: API errors vary, catch all for graceful degradation
             print(f"Warning: Pagination failed on page {page}: {e}")
             if page == 1:
                 # Try fallback to simple list on first page
                 try:
                     response = langfuse.client.prompts.list()
                     return [p.name for p in response.data]
-                except Exception as fallback_e:
+                except Exception as fallback_e:  # noqa: BLE001 - CLI tool: fallback handler needs broad catch
                     print(f"ERROR: Fallback also failed: {fallback_e}")
                     return []
             break
@@ -92,7 +88,9 @@ def get_all_prompts(langfuse: Langfuse) -> list[str]:
     return all_prompts
 
 
-def refresh_prompt_cache(langfuse: Langfuse, prompt_names: list[str] | None = None, cache_dir: Path | None = None) -> None:
+def refresh_prompt_cache(
+    langfuse: Langfuse, prompt_names: list[str] | None = None, cache_dir: Path | None = None
+) -> None:
     """Download prompts from Langfuse to local cache for viewing only (AI agents: READ-ONLY operation)."""
     if cache_dir is None:
         # Default to docs/cached_prompts relative to current directory
@@ -133,7 +131,7 @@ def refresh_prompt_cache(langfuse: Langfuse, prompt_names: list[str] | None = No
 
             except NotFoundError:
                 print(f"⚠ Not found: {prompt_name} ({label})")
-            except Exception as e:
+            except Exception as e:  # noqa: BLE001 - CLI tool: continue processing other prompts on error
                 print(f"✗ Error caching {prompt_name}: {e}")
 
 
@@ -150,7 +148,7 @@ def main() -> None:
         print("Refreshing ALL prompts in the system")
 
     refresh_prompt_cache(langfuse, prompt_names)
-    print(f"\n✓ Cached prompts saved to: docs/cached_prompts/")
+    print("\n✓ Cached prompts saved to: docs/cached_prompts/")
 
 
 if __name__ == "__main__":
