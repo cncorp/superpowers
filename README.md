@@ -66,7 +66,7 @@ Invoke with `/command-name` in Claude Code:
 
 **Code Quality:**
 - `/review-code` - Review code changes for quality and patterns
-- `/prreview` - Review pull requests comprehensively
+- `/samreview` - Sam's perspective code review (use `/samreview pr` or `/samreview commit`)
 - `/mypy` - Run and fix mypy type errors
 
 **Research & Exploration:**
