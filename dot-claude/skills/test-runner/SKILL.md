@@ -11,6 +11,12 @@ allowed-tools:
 
 Run pytest tests using project's test commands.
 
+## ⚠️ Always Use `just` Commands
+
+**`pytest` is blocked** - use `just` commands which handle Docker, migrations, and environment setup.
+
+Pass pytest args in quotes: `just test-unit "path/to/test.py::test_name -vv"`
+
 ## Primary Commands
 
 ### Frequent: Mocked Tests (~20s)
@@ -69,7 +75,7 @@ This workflow ensures you catch issues early and don't accumulate breaking chang
 ## Individual Test Suites
 
 ```bash
-# Unit tests (SQLite, FakeRedis)
+# Unit tests (SQLite, FakeRedis) - fastest, run most frequently
 cd api && just test-unit
 
 # Integration tests (SQLite, FakeRedis)
@@ -83,9 +89,14 @@ cd api && just test-e2e-live
 
 # Smoke tests (full stack with Docker)
 cd api && just test-smoke
+```
 
-# Specific test file/function
-cd api && just test-unit "tests/unit/test_models/test_fact_models.py::test_name -vv"
+## Running Specific Tests
+
+```bash
+# Specific test: just test-unit "path/to/test.py::test_name -vv"
+# Keyword filter: just test-unit "-k test_message"
+# With markers: just test-e2e "-m 'not slow'"
 ```
 
 ## When to Use

@@ -1,5 +1,9 @@
 {
   "comment": "Superpowers default settings - symlinked to .claude/settings.local.json",
+  "command_blocklist": [
+    "pytest",
+    "uv run pytest"
+  ],
   "bashCommandApprovals": {
     "requireApprovalPatterns": [
       "git commit*",

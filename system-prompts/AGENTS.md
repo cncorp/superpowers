@@ -167,6 +167,8 @@ def test_api_with_retry():
 
 **👉 For detailed test patterns and examples, see `api/tests/AGENTS.md`**
 
+**⚠️ IMPORTANT:** Always run tests via `just` commands (e.g., `just test-unit`, `just test-all-mocked`), never `pytest` directly. The `just` commands handle Docker, migrations, and environment setup automatically.
+
 #### Quick Test Type Selection
 | If Testing... | Use This Test Type | Key Setup |
 |--------------|-------------------|----------|
