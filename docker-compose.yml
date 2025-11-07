@@ -18,7 +18,7 @@ services:
       - semantic-search-data:/var/lib/postgresql/data
       - ./dot-claude/skills/semantic-code-search/init.sql:/docker-entrypoint-initdb.d/init.sql
     ports:
-      - "5433:5432"  # Different port to avoid conflicts
+      - "5430:5432"  # Shared service - uses port ending in 0 to avoid conflicts
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U codesearch -d codesearch"]
       interval: 5s
