@@ -12,7 +12,8 @@ RUN apt-get update && apt-get install -y \
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Create symlink for CLI (source will be mounted at /app/src)
-RUN ln -sf /app/src/cli.py /usr/local/bin/code-search
+# Create executable wrapper script for CLI (source will be mounted at /app/src)
+RUN echo '#!/bin/sh\nexec python /app/src/cli.py "$@"' > /usr/local/bin/code-search && \
+    chmod +x /usr/local/bin/code-search
 
 CMD ["tail", "-f", "/dev/null"]
