@@ -7,7 +7,7 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-echo -e "${GREEN}Installing Superpowers...${NC}\n"
+echo -e "${GREEN}Installing/Updating Superpowers...${NC}\n"
 
 # Get the directory where this script lives
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -95,12 +95,17 @@ else
     else
         for SKILL_DIR in $SKILL_DIRS; do
             SKILL_NAME=$(basename "$SKILL_DIR")
-            echo "  Installing dependencies for skill: $SKILL_NAME"
 
-            # Install dependencies quietly
-            (cd "$SKILL_DIR" && npm install --silent) && \
-                echo -e "${GREEN}    ✓ Installed $SKILL_NAME dependencies${NC}" || \
-                echo -e "${RED}    ✗ Failed to install $SKILL_NAME dependencies${NC}"
+            # Check if node_modules already exists and is not empty
+            if [ -d "$SKILL_DIR/node_modules" ] && [ "$(ls -A "$SKILL_DIR/node_modules" 2>/dev/null)" ]; then
+                echo -e "${GREEN}  ✓ $SKILL_NAME dependencies already installed${NC}"
+            else
+                echo "  Installing dependencies for skill: $SKILL_NAME"
+                # Install dependencies quietly
+                (cd "$SKILL_DIR" && npm install --silent) && \
+                    echo -e "${GREEN}    ✓ Installed $SKILL_NAME dependencies${NC}" || \
+                    echo -e "${RED}    ✗ Failed to install $SKILL_NAME dependencies${NC}"
+            fi
         done
     fi
 fi
@@ -112,7 +117,15 @@ SUPERPOWERS_ENV="$SUPERPOWERS_DIR/.env"
 SUPERPOWERS_ENV_EXAMPLE="$SUPERPOWERS_DIR/.env.example"
 
 if [ -f "$SUPERPOWERS_ENV" ]; then
-    echo -e "${GREEN}  ✓ .env file already exists${NC}"
+    echo -e "${GREEN}  ✓ .env file already exists - skipping API key setup${NC}"
+
+    # Check if the existing .env has a valid-looking OPENAI_API_KEY
+    if grep -q "^OPENAI_API_KEY=sk-" "$SUPERPOWERS_ENV"; then
+        echo "  ✓ OPENAI_API_KEY configured"
+    else
+        echo -e "${YELLOW}  ! OPENAI_API_KEY not configured in $SUPERPOWERS_ENV${NC}"
+        echo "    Edit superpowers/.env to add your key if needed"
+    fi
 else
     # Check if OpenAI API key is in environment or parent project
     PARENT_API_KEY=""
