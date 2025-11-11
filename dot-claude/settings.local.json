@@ -1,22 +1,23 @@
 {
-  "comment": "Superpowers default settings - symlinked to .claude/settings.local.json. pytest removed from blocklist to allow verification of test results.",
-  "command_blocklist": [
-    "git commit*",
-    "git push*",
-    "git pull*",
-    "git merge*",
-    "git reset*",
-    "git rebase*",
-    "git stash pop*",
-    "git cherry-pick*",
-    "git apply*",
-    "rm -rf*",
-    "sudo*"
-  ],
+  "comment": "Modern Claude Code permissions format using permissions.deny with Bash(command:*) syntax per official docs. Blocks dangerous bash commands, git modification, and sudo access.",
+  "permissions": {
+    "deny": [
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git pull:*)",
+      "Bash(git merge:*)",
+      "Bash(git reset:*)",
+      "Bash(git rebase:*)",
+      "Bash(git stash pop:*)",
+      "Bash(git cherry-pick:*)",
+      "Bash(git apply:*)",
+      "Bash(rm:*)",
+      "Bash(rm -rf:*)",
+      "Bash(sudo:*)"
+    ],
+    "allowGitWrite": false
+  },
   "bashCommandApprovals": {
     "requireApprovalPatterns": []
-  },
-  "permissions": {
-    "allowGitWrite": false
   }
 }
