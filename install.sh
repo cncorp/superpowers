@@ -39,50 +39,62 @@ else
     echo -e "${GREEN}  ✓ Created .claude directory${NC}"
 fi
 
-# 2. Link AGENTS.md files
-echo -e "\n${YELLOW}Step 2: Linking AGENTS.md files...${NC}"
+# 2. Copy AGENTS.md files
+# Note: We copy instead of symlink because Claude Code doesn't reliably respect symlinks
+echo -e "\n${YELLOW}Step 2: Copying AGENTS.md files...${NC}"
 
 # Root AGENTS.md
 ROOT_AGENTS="$PROJECT_ROOT/AGENTS.md"
+SOURCE_ROOT_AGENTS="$SUPERPOWERS_DIR/system-prompts/AGENTS.md"
 if [ -L "$ROOT_AGENTS" ]; then
-    echo "  ✓ Root AGENTS.md symlink already exists"
+    echo "  ! Removing old AGENTS.md symlink (switching to copy for reliability)"
+    rm "$ROOT_AGENTS"
+    cp "$SOURCE_ROOT_AGENTS" "$ROOT_AGENTS"
+    echo -e "${GREEN}  ✓ Converted root AGENTS.md from symlink to copy${NC}"
 elif [ -f "$ROOT_AGENTS" ]; then
-    echo "  ! Backing up existing $ROOT_AGENTS to ${ROOT_AGENTS}.backup"
-    mv "$ROOT_AGENTS" "${ROOT_AGENTS}.backup"
-    ln -s "$SUPERPOWERS_DIR/system-prompts/AGENTS.md" "$ROOT_AGENTS"
-    echo -e "${GREEN}  ✓ Created root AGENTS.md symlink${NC}"
+    echo "  Updating existing AGENTS.md from superpowers..."
+    cp "$SOURCE_ROOT_AGENTS" "$ROOT_AGENTS"
+    echo -e "${GREEN}  ✓ Updated root AGENTS.md${NC}"
 else
-    ln -s "$SUPERPOWERS_DIR/system-prompts/AGENTS.md" "$ROOT_AGENTS"
-    echo -e "${GREEN}  ✓ Created root AGENTS.md symlink${NC}"
+    cp "$SOURCE_ROOT_AGENTS" "$ROOT_AGENTS"
+    echo -e "${GREEN}  ✓ Created root AGENTS.md${NC}"
 fi
 
 # Testing AGENTS.md
 TESTING_AGENTS="$PROJECT_ROOT/api/tests/AGENTS.md"
+SOURCE_TESTING_AGENTS="$SUPERPOWERS_DIR/system-prompts/testing/AGENTS.md"
 if [ -L "$TESTING_AGENTS" ]; then
-    echo "  ✓ Testing AGENTS.md symlink already exists"
+    echo "  ! Removing old testing AGENTS.md symlink (switching to copy for reliability)"
+    rm "$TESTING_AGENTS"
+    cp "$SOURCE_TESTING_AGENTS" "$TESTING_AGENTS"
+    echo -e "${GREEN}  ✓ Converted testing AGENTS.md from symlink to copy${NC}"
 elif [ -f "$TESTING_AGENTS" ]; then
-    echo "  ! Backing up existing $TESTING_AGENTS to ${TESTING_AGENTS}.backup"
-    mv "$TESTING_AGENTS" "${TESTING_AGENTS}.backup"
-    ln -s "$SUPERPOWERS_DIR/system-prompts/testing/AGENTS.md" "$TESTING_AGENTS"
-    echo -e "${GREEN}  ✓ Created testing AGENTS.md symlink${NC}"
+    echo "  Updating existing testing AGENTS.md from superpowers..."
+    cp "$SOURCE_TESTING_AGENTS" "$TESTING_AGENTS"
+    echo -e "${GREEN}  ✓ Updated testing AGENTS.md${NC}"
 else
-    ln -s "$SUPERPOWERS_DIR/system-prompts/testing/AGENTS.md" "$TESTING_AGENTS"
-    echo -e "${GREEN}  ✓ Created testing AGENTS.md symlink${NC}"
+    cp "$SOURCE_TESTING_AGENTS" "$TESTING_AGENTS"
+    echo -e "${GREEN}  ✓ Created testing AGENTS.md${NC}"
 fi
 
-# 3. Link pre-commit scripts
-echo -e "\n${YELLOW}Step 3: Linking pre-commit scripts...${NC}"
-PRE_COMMIT_LINK="$PROJECT_ROOT/.pre-commit-scripts"
+# 3. Copy pre-commit scripts
+# Note: We copy instead of symlink because Claude Code doesn't reliably respect symlinks
+echo -e "\n${YELLOW}Step 3: Copying pre-commit scripts...${NC}"
+PRE_COMMIT_DIR="$PROJECT_ROOT/.pre-commit-scripts"
+SOURCE_PRE_COMMIT="$SUPERPOWERS_DIR/pre-commit-scripts"
 
-if [ -L "$PRE_COMMIT_LINK" ]; then
-    echo "  ✓ .pre-commit-scripts symlink already exists"
-elif [ -d "$PRE_COMMIT_LINK" ]; then
-    echo -e "${RED}  ✗ .pre-commit-scripts exists as a directory (not a symlink)${NC}"
-    echo "    Move it first: mv $PRE_COMMIT_LINK ${PRE_COMMIT_LINK}.backup"
-    exit 1
+if [ -L "$PRE_COMMIT_DIR" ]; then
+    echo "  ! Removing old .pre-commit-scripts symlink (switching to copy for reliability)"
+    rm "$PRE_COMMIT_DIR"
+    cp -r "$SOURCE_PRE_COMMIT" "$PRE_COMMIT_DIR"
+    echo -e "${GREEN}  ✓ Converted .pre-commit-scripts from symlink to copy${NC}"
+elif [ -d "$PRE_COMMIT_DIR" ]; then
+    echo "  Updating existing .pre-commit-scripts directory from superpowers..."
+    rsync -a --update "$SOURCE_PRE_COMMIT/" "$PRE_COMMIT_DIR/"
+    echo -e "${GREEN}  ✓ Updated .pre-commit-scripts directory${NC}"
 else
-    ln -s "$SUPERPOWERS_DIR/pre-commit-scripts" "$PRE_COMMIT_LINK"
-    echo -e "${GREEN}  ✓ Created .pre-commit-scripts symlink${NC}"
+    cp -r "$SOURCE_PRE_COMMIT" "$PRE_COMMIT_DIR"
+    echo -e "${GREEN}  ✓ Created .pre-commit-scripts directory${NC}"
 fi
 
 # 4. Install Node dependencies for skills
@@ -243,32 +255,34 @@ else
     echo -e "${YELLOW}  ! Semantic code search skill not found - skipping${NC}"
 fi
 
-# 7. Link CLAUDE.md
-echo -e "\n${YELLOW}Step 7: Linking CLAUDE.md...${NC}"
+# 7. Copy CLAUDE.md
+# Note: We copy instead of symlink because Claude Code doesn't reliably respect symlinks
+echo -e "\n${YELLOW}Step 7: Copying CLAUDE.md...${NC}"
 CLAUDE_MD="$PROJECT_ROOT/CLAUDE.md"
+SOURCE_CLAUDE_MD="$SUPERPOWERS_DIR/system-prompts/CLAUDE.md"
 
 if [ -L "$CLAUDE_MD" ]; then
-    echo "  ✓ CLAUDE.md symlink already exists"
+    echo "  ! Removing old CLAUDE.md symlink (switching to copy for reliability)"
+    rm "$CLAUDE_MD"
+    cp "$SOURCE_CLAUDE_MD" "$CLAUDE_MD"
+    echo -e "${GREEN}  ✓ Converted CLAUDE.md from symlink to copy${NC}"
 elif [ -f "$CLAUDE_MD" ]; then
-    echo "  ! Backing up existing $CLAUDE_MD to ${CLAUDE_MD}.bak"
-    mv "$CLAUDE_MD" "${CLAUDE_MD}.bak"
-    ln -s "$SUPERPOWERS_DIR/system-prompts/CLAUDE.md" "$CLAUDE_MD"
-    echo -e "${GREEN}  ✓ Created CLAUDE.md symlink${NC}"
+    echo "  Updating existing CLAUDE.md from superpowers..."
+    cp "$SOURCE_CLAUDE_MD" "$CLAUDE_MD"
+    echo -e "${GREEN}  ✓ Updated CLAUDE.md${NC}"
 else
-    ln -s "$SUPERPOWERS_DIR/system-prompts/CLAUDE.md" "$CLAUDE_MD"
-    echo -e "${GREEN}  ✓ Created CLAUDE.md symlink${NC}"
+    cp "$SOURCE_CLAUDE_MD" "$CLAUDE_MD"
+    echo -e "${GREEN}  ✓ Created CLAUDE.md${NC}"
 fi
 
 echo -e "\n${GREEN}✓ Installation complete!${NC}"
 echo ""
-echo "Superpowers setup:"
+echo "Superpowers setup (all files copied from superpowers/):"
 echo "  - $PROJECT_ROOT/.claude (copied from superpowers/dot-claude)"
-echo "  - $PROJECT_ROOT/.pre-commit-scripts -> $SUPERPOWERS_DIR/pre-commit-scripts (symlink)"
-echo ""
-echo "The following symlinks have been created:"
-echo "  - $PROJECT_ROOT/CLAUDE.md -> $SUPERPOWERS_DIR/system-prompts/CLAUDE.md"
-echo "  - $PROJECT_ROOT/AGENTS.md -> $SUPERPOWERS_DIR/system-prompts/AGENTS.md"
-echo "  - $PROJECT_ROOT/api/tests/AGENTS.md -> $SUPERPOWERS_DIR/system-prompts/testing/AGENTS.md"
+echo "  - $PROJECT_ROOT/.pre-commit-scripts (copied from superpowers/pre-commit-scripts)"
+echo "  - $PROJECT_ROOT/CLAUDE.md (copied from superpowers/system-prompts/CLAUDE.md)"
+echo "  - $PROJECT_ROOT/AGENTS.md (copied from superpowers/system-prompts/AGENTS.md)"
+echo "  - $PROJECT_ROOT/api/tests/AGENTS.md (copied from superpowers/system-prompts/testing/AGENTS.md)"
 echo ""
 
 # Check if .env was created
@@ -287,6 +301,6 @@ if docker ps | grep -q superpowers-semantic-search-cli; then
     echo ""
 fi
 
-echo "To update .claude directory from superpowers: re-run ./superpowers/install.sh"
-echo "To update patterns in AGENTS.md/CLAUDE.md: edit files in superpowers/ (they are symlinked)"
+echo "To update from superpowers (CLAUDE.md/AGENTS.md/.claude/.pre-commit-scripts): re-run ./superpowers/install.sh"
+echo "To edit patterns: modify files in superpowers/system-prompts/ then re-run install.sh to sync"
 echo "To manage superpowers services: cd superpowers && docker-compose up -d"
