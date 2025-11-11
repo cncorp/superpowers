@@ -77,24 +77,19 @@ else
     echo -e "${GREEN}  ✓ Created testing AGENTS.md${NC}"
 fi
 
-# 3. Copy pre-commit scripts
-# Note: We copy instead of symlink because Claude Code doesn't reliably respect symlinks
-echo -e "\n${YELLOW}Step 3: Copying pre-commit scripts...${NC}"
-PRE_COMMIT_DIR="$PROJECT_ROOT/.pre-commit-scripts"
-SOURCE_PRE_COMMIT="$SUPERPOWERS_DIR/pre-commit-scripts"
+# 3. Link pre-commit scripts
+echo -e "\n${YELLOW}Step 3: Linking pre-commit scripts...${NC}"
+PRE_COMMIT_LINK="$PROJECT_ROOT/.pre-commit-scripts"
 
-if [ -L "$PRE_COMMIT_DIR" ]; then
-    echo "  ! Removing old .pre-commit-scripts symlink (switching to copy for reliability)"
-    rm "$PRE_COMMIT_DIR"
-    cp -r "$SOURCE_PRE_COMMIT" "$PRE_COMMIT_DIR"
-    echo -e "${GREEN}  ✓ Converted .pre-commit-scripts from symlink to copy${NC}"
-elif [ -d "$PRE_COMMIT_DIR" ]; then
-    echo "  Updating existing .pre-commit-scripts directory from superpowers..."
-    rsync -a --update "$SOURCE_PRE_COMMIT/" "$PRE_COMMIT_DIR/"
-    echo -e "${GREEN}  ✓ Updated .pre-commit-scripts directory${NC}"
+if [ -L "$PRE_COMMIT_LINK" ]; then
+    echo "  ✓ .pre-commit-scripts symlink already exists"
+elif [ -d "$PRE_COMMIT_LINK" ]; then
+    echo -e "${RED}  ✗ .pre-commit-scripts exists as a directory (not a symlink)${NC}"
+    echo "    Move it first: mv $PRE_COMMIT_LINK ${PRE_COMMIT_LINK}.backup"
+    exit 1
 else
-    cp -r "$SOURCE_PRE_COMMIT" "$PRE_COMMIT_DIR"
-    echo -e "${GREEN}  ✓ Created .pre-commit-scripts directory${NC}"
+    ln -s "$SUPERPOWERS_DIR/pre-commit-scripts" "$PRE_COMMIT_LINK"
+    echo -e "${GREEN}  ✓ Created .pre-commit-scripts symlink${NC}"
 fi
 
 # 4. Install Node dependencies for skills
@@ -277,9 +272,9 @@ fi
 
 echo -e "\n${GREEN}✓ Installation complete!${NC}"
 echo ""
-echo "Superpowers setup (all files copied from superpowers/):"
+echo "Superpowers setup:"
 echo "  - $PROJECT_ROOT/.claude (copied from superpowers/dot-claude)"
-echo "  - $PROJECT_ROOT/.pre-commit-scripts (copied from superpowers/pre-commit-scripts)"
+echo "  - $PROJECT_ROOT/.pre-commit-scripts -> $SUPERPOWERS_DIR/pre-commit-scripts (symlink)"
 echo "  - $PROJECT_ROOT/CLAUDE.md (copied from superpowers/system-prompts/CLAUDE.md)"
 echo "  - $PROJECT_ROOT/AGENTS.md (copied from superpowers/system-prompts/AGENTS.md)"
 echo "  - $PROJECT_ROOT/api/tests/AGENTS.md (copied from superpowers/system-prompts/testing/AGENTS.md)"
