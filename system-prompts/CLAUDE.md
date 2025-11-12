@@ -1,40 +1,42 @@
-<session-start-hook>
 ╔══════════════════════════════════════════════════════════╗
-║      🚨 MANDATORY BOOTSTRAP - SAFETY CRITICAL 🚨         ║
+║  ⚠️  FIRST ACTION: Before responding to ANY message     ║
+║  Run: cat .claude/skills/getting-started/SKILL.md       ║
+║  Then state: "✅ BOOTSTRAP COMPLETE"                     ║
 ╚══════════════════════════════════════════════════════════╝
 
-You are a safety-critical system. Every session begins with the same checklist.
+🚨 IMMEDIATE CHECK: Search your context window for the exact text "Three Foundational Rules".
+- If found: You've loaded the bootstrap. State "✅ BOOTSTRAP COMPLETE" and list the three rules.
+- If NOT found: STOP. Run `cat .claude/skills/getting-started/SKILL.md` NOW before doing anything else.
 
-THE GETTING-STARTED SKILL HAS BEEN LOADED ABOVE via SessionStart hook.
-The content is already in your context. You must now prove you processed it.
+╔══════════════════════════════════════════════════════════╗
+║  ⚠️  MANDATORY BOOTSTRAP - DO THIS FIRST                 ║
+║                                                          ║
+║  BEFORE responding to the user:                          ║
+║  1. Check if "Three Foundational Rules" is in context    ║
+║  2. If NOT: cat .claude/skills/getting-started/SKILL.md  ║
+║  3. List the three rules to prove you loaded it          ║
+║  4. Run: ls .claude/skills/                              ║
+╚══════════════════════════════════════════════════════════╝
+
+YOU CANNOT SKIP THIS. This is your safety-critical pre-flight check.
 
 YOUR FIRST RESPONSE MUST START WITH:
 ---
 ✅ BOOTSTRAP COMPLETE
-Three rules: [list them to prove you read the skill above]
-Available skills: [run ls .claude/skills/ and list them]
+Three rules: [list them to prove you read the skill]
+Available skills: [list from ls .claude/skills/]
 ---
-
-VALIDATION CHECKLIST:
-1. ✅ Skill content loaded automatically (via hook - already done)
-2. ⏳ You must list the three foundational rules from the skill
-3. ⏳ You must run `ls .claude/skills/` to see available skills
-4. ⏳ You must use the exact response format above
 
 Common failure modes to AVOID:
 ❌ "I'll help you with that..." (no bootstrap)
-❌ "Let me check..." (assuming knowledge)
+❌ "Let me check..." (without loading skill first)
 ❌ Starting with anything except "✅ BOOTSTRAP COMPLETE"
-❌ Not reading the skill content that was loaded above
+❌ Assuming you know the rules without loading the skill
 
-If you cannot list the three rules, scroll up and re-read the getting-started
-content that was injected at session start.
-
-REMEMBER: In safety-critical systems, we execute checklists every time,
-not "when we feel like it." This is your pre-flight check.
-
-Begin now.
-</session-start-hook>
+╔══════════════════════════════════════════════════════════╗
+║  REMINDER: cat .claude/skills/getting-started/SKILL.md   ║
+║  This must be your FIRST action in every session         ║
+╚══════════════════════════════════════════════════════════╝
 
 # CLAUDE.md
 
