@@ -159,11 +159,33 @@ Where: `.claude/skills/docker-log-debugger/SKILL.md`
 When to use: Need to find code semantically, not by text matching
 Where: `.claude/skills/semantic-code-search/SKILL.md`
 
+### tailscale-manager
+**Use for managing Tailscale funnels**
+
+When to use: Starting/stopping Tailscale funnels, switching between ct projects, exposing local services to internet
+Where: `.claude/skills/tailscale-manager/SKILL.md`
+
+**YOU MUST:**
+- Check funnel status before starting: `sudo tailscale funnel status`
+- Stop existing funnel before starting new one: `sudo tailscale funnel --https=443 off`
+- Start funnel for specific port: `sudo tailscale funnel --https=443 808X`
+- Verify it started: `sudo tailscale funnel status`
+
+**Port pattern:**
+- ct2: 8082, ct3: 8083, ct4: 8084, etc.
+- Only ONE funnel can run at a time on port 443
+
+**Violations:**
+- ❌ Starting a new funnel without stopping the existing one
+- ❌ Not verifying funnel status before/after changes
+- ❌ Killing tailscaled daemon instead of just the funnel process
+
 ### twilio-test-caller
 **Use for testing voice functionality**
 
 When to use: Testing voice features and call flows
 Where: `.claude/skills/twilio-test-caller/SKILL.md`
+**Dependencies:** Requires tailscale-manager skill (funnel must be running)
 
 ## Enforcement: You Will Be Tested
 

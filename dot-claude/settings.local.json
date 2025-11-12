@@ -1,5 +1,5 @@
 {
-  "comment": "Modern Claude Code permissions format using permissions.deny with Bash(command:*) syntax per official docs. Blocks dangerous bash commands, git modification, and sudo access.",
+  "comment": "Modern Claude Code permissions format using permissions.deny with Bash(command:*) syntax per official docs. Blocks dangerous bash commands and git modification. Sudo is allowed for tailscale management.",
   "permissions": {
     "deny": [
       "Bash(git commit:*)",
@@ -12,8 +12,7 @@
       "Bash(git cherry-pick:*)",
       "Bash(git apply:*)",
       "Bash(rm:*)",
-      "Bash(rm -rf:*)",
-      "Bash(sudo:*)"
+      "Bash(rm -rf:*)"
     ],
     "allowGitWrite": false
   },
