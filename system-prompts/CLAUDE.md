@@ -1,42 +1,29 @@
 ╔══════════════════════════════════════════════════════════╗
-║  ⚠️  FIRST ACTION: Before responding to ANY message     ║
-║  Run: cat .claude/skills/getting-started/SKILL.md       ║
-║  Then state: "✅ BOOTSTRAP COMPLETE"                     ║
-╚══════════════════════════════════════════════════════════╝
-
-🚨 IMMEDIATE CHECK: Search your context window for the exact text "Three Foundational Rules".
-- If found: You've loaded the bootstrap. State "✅ BOOTSTRAP COMPLETE" and list the three rules.
-- If NOT found: STOP. Run `cat .claude/skills/getting-started/SKILL.md` NOW before doing anything else.
-
-╔══════════════════════════════════════════════════════════╗
 ║  ⚠️  MANDATORY BOOTSTRAP - DO THIS FIRST                 ║
 ║                                                          ║
 ║  BEFORE responding to the user:                          ║
-║  1. Check if "Three Foundational Rules" is in context    ║
-║  2. If NOT: cat .claude/skills/getting-started/SKILL.md  ║
-║  3. List the three rules to prove you loaded it          ║
+║  1. Search context for: "bootstrap_token: b7k9x2m5..."   ║
+║  2. If NOT FOUND: cat .claude/skills/getting-started/SKILL.md ║
+║  3. Verify you have the FULL 16-character token          ║
 ║  4. Run: ls .claude/skills/                              ║
+║                                                          ║
+║  YOU CANNOT SKIP THIS. This is your pre-flight check.    ║
 ╚══════════════════════════════════════════════════════════╝
-
-YOU CANNOT SKIP THIS. This is your safety-critical pre-flight check.
 
 YOUR FIRST RESPONSE MUST START WITH:
 ---
 ✅ BOOTSTRAP COMPLETE
-Three rules: [list them to prove you read the skill]
+Bootstrap token verified: [full 16-char token from SKILL.md]
+Three foundational rules: [list them]
 Available skills: [list from ls .claude/skills/]
 ---
 
 Common failure modes to AVOID:
-❌ "I'll help you with that..." (no bootstrap)
-❌ "Let me check..." (without loading skill first)
-❌ Starting with anything except "✅ BOOTSTRAP COMPLETE"
-❌ Assuming you know the rules without loading the skill
-
-╔══════════════════════════════════════════════════════════╗
-║  REMINDER: cat .claude/skills/getting-started/SKILL.md   ║
-║  This must be your FIRST action in every session         ║
-╚══════════════════════════════════════════════════════════╝
+❌ "I'll help you with that..." (bootstrap token not in context)
+❌ "Let me check..." (you didn't verify the token)
+❌ Starting without confirming the full 16-character bootstrap token
+❌ Finding "Three Foundational Rules" in CLAUDE.md (wrong - need the token)
+❌ Using partial token "b7k9x2m5..." without reading SKILL.md for full token
 
 # CLAUDE.md
 

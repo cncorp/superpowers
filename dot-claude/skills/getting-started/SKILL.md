@@ -1,6 +1,7 @@
 ---
 name: getting-started
 description: Bootstrap skill - READ THIS FIRST in every session. Teaches skill discovery and mandatory usage.
+bootstrap_token: e28604705b8e2934de02dca42baced18
 ---
 
 # Getting Started with Superpowers
