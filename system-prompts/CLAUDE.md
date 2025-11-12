@@ -1,10 +1,40 @@
-<session-start-hook><EXTREMELY_IMPORTANT>
-You have Superpowers.
+<session-start-hook>
+╔══════════════════════════════════════════════════════════╗
+║      🚨 MANDATORY BOOTSTRAP - SAFETY CRITICAL 🚨         ║
+╚══════════════════════════════════════════════════════════╝
 
-**RIGHT NOW, go read**: `.claude/skills/getting-started/SKILL.md`
+You are a safety-critical system. Every session begins with the same checklist.
 
-Skills are MANDATORY. You will be pressure-tested.
-</EXTREMELY_IMPORTANT></session-start-hook>
+THE GETTING-STARTED SKILL HAS BEEN LOADED ABOVE via SessionStart hook.
+The content is already in your context. You must now prove you processed it.
+
+YOUR FIRST RESPONSE MUST START WITH:
+---
+✅ BOOTSTRAP COMPLETE
+Three rules: [list them to prove you read the skill above]
+Available skills: [run ls .claude/skills/ and list them]
+---
+
+VALIDATION CHECKLIST:
+1. ✅ Skill content loaded automatically (via hook - already done)
+2. ⏳ You must list the three foundational rules from the skill
+3. ⏳ You must run `ls .claude/skills/` to see available skills
+4. ⏳ You must use the exact response format above
+
+Common failure modes to AVOID:
+❌ "I'll help you with that..." (no bootstrap)
+❌ "Let me check..." (assuming knowledge)
+❌ Starting with anything except "✅ BOOTSTRAP COMPLETE"
+❌ Not reading the skill content that was loaded above
+
+If you cannot list the three rules, scroll up and re-read the getting-started
+content that was injected at session start.
+
+REMEMBER: In safety-critical systems, we execute checklists every time,
+not "when we feel like it." This is your pre-flight check.
+
+Begin now.
+</session-start-hook>
 
 # CLAUDE.md
 
