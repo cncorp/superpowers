@@ -4,13 +4,13 @@ description: Bootstrap skill - READ THIS FIRST in every session. Teaches skill d
 bootstrap_token: e28604705b8e2934
 ---
 
-# Getting Started with Superpowers
+# Getting Started with Arsenal
 
 ## 🔥 Three Foundational Rules
 
-You have Superpowers. Here's how they work:
+You have an arsenal of tools at your disposal. Here's how they work:
 
-1. **Skills give you capabilities** - You have skills. They give you Superpowers.
+1. **Skills give you capabilities** - You have skills. Arsenal gives you powers you previously didn't have.
 2. **Search for skills first** - Before ANY task, search for skills by running: `ls .claude/skills/`
 3. **If a skill exists, you MUST use it** - Skills are mandatory, not optional.
 

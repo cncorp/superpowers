@@ -40,17 +40,17 @@ Common failure modes to AVOID:
 
 # CLAUDE.md
 
-This repository uses the **superpowers** submodule to provide AI coding agents (like Claude Code) with specialized capabilities through agents, commands, and skills.
+This repository uses the **arsenal** submodule to provide AI coding agents (like Claude Code) with specialized capabilities through agents, commands, and skills.
 
 ## 📁 Documentation Structure
 
 All assistant guidance is consolidated under `AGENTS.md` files:
 
-- **`AGENTS.md`** — Top-level rules for every AI coding agent (copied from `superpowers/system-prompts/AGENTS.md`)
-- **`api/tests/AGENTS.md`** — Testing strategy, fixtures, and patterns for agents (copied from `superpowers/system-prompts/testing/AGENTS.md`)
+- **`AGENTS.md`** — Top-level rules for every AI coding agent (copied from `arsenal/system-prompts/AGENTS.md`)
+- **`api/tests/AGENTS.md`** — Testing strategy, fixtures, and patterns for agents (copied from `arsenal/system-prompts/testing/AGENTS.md`)
 - **Project-specific guidance** — Files like `api/src/cli/AGENTS.md` remain in their original locations for repo-specific rules
 
-Keep these files in sync by updating them in the `superpowers/` submodule and running `./superpowers/install.sh`.
+Keep these files in sync by updating them in the `arsenal/` submodule and running `./arsenal/install.sh`.
 
 ## 🤖 When to Use Agents, Commands, and Skills
 
@@ -96,7 +96,7 @@ Available commands include:
 **🚨 CRITICAL: Skills are NOT optional tools. They are required patterns.**
 
 **The Three Foundational Rules:**
-1. **Skills give you capabilities** - You have skills. They give you Superpowers.
+1. **Skills give you capabilities** - You have skills. Arsenal gives you powers you previously didn't have.
 2. **Search for skills first** - Before ANY task: `ls .claude/skills/`
 3. **If a skill exists, you MUST use it** - Mandatory, not optional.
 
@@ -156,7 +156,7 @@ DO NOT jump to fixing bugs when the user is:
 ## 📚 Quick Reference
 
 For detailed development guidelines, architecture, and standards, see:
-- **Main project guidance**: `AGENTS.md` (copied from superpowers)
-- **Testing patterns**: `api/tests/AGENTS.md` (copied from superpowers)
+- **Main project guidance**: `AGENTS.md` (copied from arsenal)
+- **Testing patterns**: `api/tests/AGENTS.md` (copied from arsenal)
 - **CLI tool safety**: `api/src/cli/AGENTS.md` (project-specific)
 - **Current work**: `specifications/CURRENT_SPEC.md`

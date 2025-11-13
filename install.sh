@@ -7,14 +7,14 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-echo -e "${GREEN}Installing/Updating Superpowers...${NC}\n"
+echo -e "${GREEN}Installing/Updating Arsenal...${NC}\n"
 
 # Get the directory where this script lives
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SUPERPOWERS_DIR="$SCRIPT_DIR"
 PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
-echo "Superpowers directory: $SUPERPOWERS_DIR"
+echo "Arsenal directory: $SUPERPOWERS_DIR"
 echo "Project root directory: $PROJECT_ROOT"
 echo ""
 
@@ -30,7 +30,7 @@ if [ -L "$CLAUDE_DIR" ]; then
     cp -r "$SOURCE_CLAUDE" "$CLAUDE_DIR"
     echo -e "${GREEN}  ✓ Converted .claude from symlink to copy${NC}"
 elif [ -d "$CLAUDE_DIR" ]; then
-    echo "  Updating existing .claude directory from superpowers..."
+    echo "  Updating existing .claude directory from arsenal..."
     # Use rsync to sync, preserving newer files in destination if any
     rsync -a --update "$SOURCE_CLAUDE/" "$CLAUDE_DIR/"
     echo -e "${GREEN}  ✓ Updated .claude directory${NC}"
@@ -58,7 +58,7 @@ elif [ -f "$ROOT_AGENTS" ]; then
         cp "$ROOT_AGENTS" "$BACKUP_FILE"
         echo -e "${YELLOW}  ! Created backup: $BACKUP_FILE${NC}"
     fi
-    echo "  Updating existing AGENTS.md from superpowers..."
+    echo "  Updating existing AGENTS.md from arsenal..."
     cp "$SOURCE_ROOT_AGENTS" "$ROOT_AGENTS"
     echo -e "${GREEN}  ✓ Updated root AGENTS.md${NC}"
 else
@@ -81,7 +81,7 @@ elif [ -f "$TESTING_AGENTS" ]; then
         cp "$TESTING_AGENTS" "$BACKUP_FILE"
         echo -e "${YELLOW}  ! Created backup: $BACKUP_FILE${NC}"
     fi
-    echo "  Updating existing testing AGENTS.md from superpowers..."
+    echo "  Updating existing testing AGENTS.md from arsenal..."
     cp "$SOURCE_TESTING_AGENTS" "$TESTING_AGENTS"
     echo -e "${GREEN}  ✓ Updated testing AGENTS.md${NC}"
 else
@@ -135,56 +135,139 @@ else
     fi
 fi
 
-# 5. Setup superpowers environment configuration
-echo -e "\n${YELLOW}Step 5: Setting up superpowers environment configuration...${NC}"
+# 5. Setup arsenal environment configuration
+echo -e "\n${YELLOW}Step 5: Setting up arsenal environment configuration...${NC}"
 
 SUPERPOWERS_ENV="$SUPERPOWERS_DIR/.env"
 SUPERPOWERS_ENV_EXAMPLE="$SUPERPOWERS_DIR/.env.example"
 
 if [ -f "$SUPERPOWERS_ENV" ]; then
-    echo -e "${GREEN}  ✓ .env file already exists - skipping API key setup${NC}"
+    echo -e "${GREEN}  ✓ .env file already exists${NC}"
 
-    # Check if the existing .env has a valid-looking OPENAI_API_KEY
+    # Check for keys in parent project (.env or api/.env)
+    PARENT_API_KEY=""
+    PARENT_LANGFUSE_PUBLIC_KEY=""
+    PARENT_LANGFUSE_SECRET_KEY=""
+    PARENT_LANGFUSE_HOST=""
+
+    # Check api/.env first, then .env
+    for parent_env in "$PROJECT_ROOT/api/.env" "$PROJECT_ROOT/.env"; do
+        if [ -f "$parent_env" ]; then
+            if [ -z "$PARENT_API_KEY" ]; then
+                PARENT_API_KEY=$(grep "^OPENAI_API_KEY=" "$parent_env" | head -1 | cut -d'=' -f2 | tr -d ' ')
+            fi
+            if [ -z "$PARENT_LANGFUSE_PUBLIC_KEY" ]; then
+                PARENT_LANGFUSE_PUBLIC_KEY=$(grep "^LANGFUSE_PUBLIC_KEY=" "$parent_env" | head -1 | cut -d'=' -f2 | tr -d ' ')
+            fi
+            if [ -z "$PARENT_LANGFUSE_SECRET_KEY" ]; then
+                PARENT_LANGFUSE_SECRET_KEY=$(grep "^LANGFUSE_SECRET_KEY=" "$parent_env" | head -1 | cut -d'=' -f2 | tr -d ' ')
+            fi
+            if [ -z "$PARENT_LANGFUSE_HOST" ]; then
+                PARENT_LANGFUSE_HOST=$(grep "^LANGFUSE_HOST=" "$parent_env" | head -1 | cut -d'=' -f2 | tr -d ' ')
+            fi
+        fi
+    done
+
+    # Check and offer to update OPENAI_API_KEY
     if grep -q "^OPENAI_API_KEY=sk-" "$SUPERPOWERS_ENV"; then
         echo "  ✓ OPENAI_API_KEY configured"
     else
-        echo -e "${YELLOW}  ! OPENAI_API_KEY not configured in $SUPERPOWERS_ENV${NC}"
-        echo "    Edit superpowers/.env to add your key if needed"
-    fi
-else
-    # Check if OpenAI API key is in environment or parent project
-    PARENT_API_KEY=""
-    if [ -f "$PROJECT_ROOT/api/.env" ]; then
-        PARENT_API_KEY=$(grep "^OPENAI_API_KEY=" "$PROJECT_ROOT/api/.env" | head -1 | cut -d'=' -f2 | tr -d ' ')
+        if [ -n "$PARENT_API_KEY" ]; then
+            echo -e "${YELLOW}  ! OPENAI_API_KEY not configured${NC}"
+            read -p "  Copy OPENAI_API_KEY from parent project? [y/N]: " -n 1 -r
+            echo
+            if [[ $REPLY =~ ^[Yy]$ ]]; then
+                sed -i "s|OPENAI_API_KEY=.*|OPENAI_API_KEY=$PARENT_API_KEY|" "$SUPERPOWERS_ENV"
+                echo -e "${GREEN}    ✓ Copied OPENAI_API_KEY${NC}"
+            fi
+        else
+            echo -e "${YELLOW}  ! OPENAI_API_KEY not configured - edit arsenal/.env to add it${NC}"
+        fi
     fi
 
+    # Check and offer to update LANGFUSE keys
+    if grep -q "^LANGFUSE_PUBLIC_KEY=pk-lf-" "$SUPERPOWERS_ENV"; then
+        echo "  ✓ LANGFUSE keys configured"
+    else
+        if [ -n "$PARENT_LANGFUSE_PUBLIC_KEY" ] && [ -n "$PARENT_LANGFUSE_SECRET_KEY" ]; then
+            echo -e "${YELLOW}  ! LANGFUSE keys not configured${NC}"
+            read -p "  Copy LANGFUSE keys from parent project? [y/N]: " -n 1 -r
+            echo
+            if [[ $REPLY =~ ^[Yy]$ ]]; then
+                sed -i "s|LANGFUSE_PUBLIC_KEY=.*|LANGFUSE_PUBLIC_KEY=$PARENT_LANGFUSE_PUBLIC_KEY|" "$SUPERPOWERS_ENV"
+                sed -i "s|LANGFUSE_SECRET_KEY=.*|LANGFUSE_SECRET_KEY=$PARENT_LANGFUSE_SECRET_KEY|" "$SUPERPOWERS_ENV"
+                if [ -n "$PARENT_LANGFUSE_HOST" ]; then
+                    sed -i "s|LANGFUSE_HOST=.*|LANGFUSE_HOST=$PARENT_LANGFUSE_HOST|" "$SUPERPOWERS_ENV"
+                fi
+                echo -e "${GREEN}    ✓ Copied LANGFUSE keys${NC}"
+            fi
+        else
+            echo -e "${YELLOW}  ! LANGFUSE keys not configured - edit arsenal/.env to add them if needed${NC}"
+        fi
+    fi
+else
+    echo "  Creating .env file from template..."
+    cp "$SUPERPOWERS_ENV_EXAMPLE" "$SUPERPOWERS_ENV"
+    echo -e "${GREEN}  ✓ Created .env file${NC}"
+
+    # Check for keys in parent project (.env or api/.env)
+    PARENT_API_KEY=""
+    PARENT_LANGFUSE_PUBLIC_KEY=""
+    PARENT_LANGFUSE_SECRET_KEY=""
+    PARENT_LANGFUSE_HOST=""
+
+    # Check api/.env first, then .env
+    for parent_env in "$PROJECT_ROOT/api/.env" "$PROJECT_ROOT/.env"; do
+        if [ -f "$parent_env" ]; then
+            if [ -z "$PARENT_API_KEY" ]; then
+                PARENT_API_KEY=$(grep "^OPENAI_API_KEY=" "$parent_env" | head -1 | cut -d'=' -f2 | tr -d ' ')
+            fi
+            if [ -z "$PARENT_LANGFUSE_PUBLIC_KEY" ]; then
+                PARENT_LANGFUSE_PUBLIC_KEY=$(grep "^LANGFUSE_PUBLIC_KEY=" "$parent_env" | head -1 | cut -d'=' -f2 | tr -d ' ')
+            fi
+            if [ -z "$PARENT_LANGFUSE_SECRET_KEY" ]; then
+                PARENT_LANGFUSE_SECRET_KEY=$(grep "^LANGFUSE_SECRET_KEY=" "$parent_env" | head -1 | cut -d'=' -f2 | tr -d ' ')
+            fi
+            if [ -z "$PARENT_LANGFUSE_HOST" ]; then
+                PARENT_LANGFUSE_HOST=$(grep "^LANGFUSE_HOST=" "$parent_env" | head -1 | cut -d'=' -f2 | tr -d ' ')
+            fi
+        fi
+    done
+
+    # Offer to configure OpenAI API key
     if [ -n "$OPENAI_API_KEY" ]; then
         echo "  Using OPENAI_API_KEY from environment"
-        cp "$SUPERPOWERS_ENV_EXAMPLE" "$SUPERPOWERS_ENV"
         sed -i "s|OPENAI_API_KEY=.*|OPENAI_API_KEY=$OPENAI_API_KEY|" "$SUPERPOWERS_ENV"
-        echo -e "${GREEN}  ✓ Created .env with API key from environment${NC}"
+        echo -e "${GREEN}  ✓ Set OPENAI_API_KEY${NC}"
     elif [ -n "$PARENT_API_KEY" ]; then
-        echo "  Found OPENAI_API_KEY in parent project (api/.env)"
-        read -p "  Use this key for superpowers? [Y/n]: " -n 1 -r
+        read -p "  Copy OPENAI_API_KEY from parent project? [y/N]: " -n 1 -r
         echo
-        if [[ ! $REPLY =~ ^[Nn]$ ]]; then
-            cp "$SUPERPOWERS_ENV_EXAMPLE" "$SUPERPOWERS_ENV"
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
             sed -i "s|OPENAI_API_KEY=.*|OPENAI_API_KEY=$PARENT_API_KEY|" "$SUPERPOWERS_ENV"
-            echo -e "${GREEN}  ✓ Created .env with API key from parent project${NC}"
+            echo -e "${GREEN}  ✓ Copied OPENAI_API_KEY${NC}"
         else
-            cp "$SUPERPOWERS_ENV_EXAMPLE" "$SUPERPOWERS_ENV"
-            echo -e "${YELLOW}  ! Created .env template - edit it to add your OpenAI API key${NC}"
+            echo -e "${YELLOW}  ! OPENAI_API_KEY not set - edit arsenal/.env to add it${NC}"
         fi
     else
-        read -p "  Enter OpenAI API key (or press Enter to skip): " API_KEY
-        if [ -n "$API_KEY" ]; then
-            cp "$SUPERPOWERS_ENV_EXAMPLE" "$SUPERPOWERS_ENV"
-            sed -i "s|OPENAI_API_KEY=.*|OPENAI_API_KEY=$API_KEY|" "$SUPERPOWERS_ENV"
-            echo -e "${GREEN}  ✓ Created .env with provided API key${NC}"
+        echo -e "${YELLOW}  ! OPENAI_API_KEY not found - edit arsenal/.env to add it${NC}"
+    fi
+
+    # Offer to configure Langfuse keys
+    if [ -n "$PARENT_LANGFUSE_PUBLIC_KEY" ] && [ -n "$PARENT_LANGFUSE_SECRET_KEY" ]; then
+        read -p "  Copy LANGFUSE keys from parent project? [y/N]: " -n 1 -r
+        echo
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            sed -i "s|LANGFUSE_PUBLIC_KEY=.*|LANGFUSE_PUBLIC_KEY=$PARENT_LANGFUSE_PUBLIC_KEY|" "$SUPERPOWERS_ENV"
+            sed -i "s|LANGFUSE_SECRET_KEY=.*|LANGFUSE_SECRET_KEY=$PARENT_LANGFUSE_SECRET_KEY|" "$SUPERPOWERS_ENV"
+            if [ -n "$PARENT_LANGFUSE_HOST" ]; then
+                sed -i "s|LANGFUSE_HOST=.*|LANGFUSE_HOST=$PARENT_LANGFUSE_HOST|" "$SUPERPOWERS_ENV"
+            fi
+            echo -e "${GREEN}  ✓ Copied LANGFUSE keys${NC}"
         else
-            cp "$SUPERPOWERS_ENV_EXAMPLE" "$SUPERPOWERS_ENV"
-            echo -e "${YELLOW}  ! Created .env template - edit it to add your OpenAI API key${NC}"
+            echo -e "${YELLOW}  ! LANGFUSE keys not set - edit arsenal/.env to add them if needed${NC}"
         fi
+    else
+        echo -e "${YELLOW}  ! LANGFUSE keys not found - edit arsenal/.env to add them if needed${NC}"
     fi
 fi
 
@@ -199,17 +282,17 @@ if [ -d "$CODE_SEARCH_DIR" ]; then
     if ! command -v docker &> /dev/null; then
         echo -e "${YELLOW}  ! Docker not found - skipping semantic code search setup${NC}"
         echo "    To use semantic code search later, install Docker and run:"
-        echo "    cd superpowers && docker-compose up -d"
+        echo "    cd arsenal && docker-compose up -d"
     else
         # Check if containers are already running
-        if docker ps | grep -q superpowers-semantic-search-cli; then
+        if docker ps | grep -q arsenal-semantic-search-cli; then
             echo -e "${GREEN}  ✓ Semantic code search containers already running${NC}"
         else
             # Check if OpenAI API key is configured
             if [ ! -f "$SUPERPOWERS_ENV" ] || ! grep -q "^OPENAI_API_KEY=sk-" "$SUPERPOWERS_ENV"; then
                 echo -e "${YELLOW}  ! OPENAI_API_KEY not configured in $SUPERPOWERS_ENV${NC}"
-                echo "    Edit superpowers/.env to add your key, then run:"
-                echo "    cd superpowers && docker-compose up -d"
+                echo "    Edit arsenal/.env to add your key, then run:"
+                echo "    cd arsenal && docker-compose up -d"
             else
                 read -p "  Start semantic code search containers? [y/N]: " -n 1 -r
                 echo
@@ -226,7 +309,7 @@ if [ -d "$CODE_SEARCH_DIR" ]; then
                         # Wait for postgres to be healthy
                         echo "    Waiting for database to be ready..."
                         for i in {1..30}; do
-                            if docker exec superpowers-semantic-search-cli psql postgresql://codesearch:codesearch@semantic-search-db:5432/codesearch -c "SELECT 1" &> /dev/null; then
+                            if docker exec arsenal-semantic-search-cli psql postgresql://codesearch:codesearch@semantic-search-db:5432/codesearch -c "SELECT 1" &> /dev/null; then
                                 break
                             fi
                             sleep 1
@@ -234,17 +317,17 @@ if [ -d "$CODE_SEARCH_DIR" ]; then
 
                         # Index the project root
                         echo "    Indexing codebase (this may take a minute)..."
-                        docker exec superpowers-semantic-search-cli code-search index /project --clear 2>&1 | tail -5
+                        docker exec arsenal-semantic-search-cli code-search index /project --clear 2>&1 | tail -5
 
                         if [ $? -eq 0 ]; then
                             echo -e "${GREEN}    ✓ Indexed codebase${NC}"
 
                             # Show stats
                             echo ""
-                            docker exec superpowers-semantic-search-cli code-search stats
+                            docker exec arsenal-semantic-search-cli code-search stats
                         else
                             echo -e "${RED}    ✗ Failed to index codebase${NC}"
-                            echo "    Try manually: docker exec superpowers-semantic-search-cli code-search index /project --clear"
+                            echo "    Try manually: docker exec arsenal-semantic-search-cli code-search index /project --clear"
                         fi
                     else
                         echo -e "${RED}    ✗ Failed to start semantic code search containers${NC}"
@@ -253,7 +336,7 @@ if [ -d "$CODE_SEARCH_DIR" ]; then
                     cd "$PROJECT_ROOT"
                 else
                     echo "  Skipped semantic code search startup"
-                    echo "  To start later: cd superpowers && docker-compose up -d"
+                    echo "  To start later: cd arsenal && docker-compose up -d"
                 fi
             fi
         fi
@@ -280,7 +363,7 @@ elif [ -f "$CLAUDE_MD" ]; then
         cp "$CLAUDE_MD" "$BACKUP_FILE"
         echo -e "${YELLOW}  ! Created backup: $BACKUP_FILE${NC}"
     fi
-    echo "  Updating existing CLAUDE.md from superpowers..."
+    echo "  Updating existing CLAUDE.md from arsenal..."
     cp "$SOURCE_CLAUDE_MD" "$CLAUDE_MD"
     echo -e "${GREEN}  ✓ Updated CLAUDE.md${NC}"
 else
@@ -399,32 +482,32 @@ fi
 
 echo -e "\n${GREEN}✓ Installation complete!${NC}"
 echo ""
-echo "Superpowers setup:"
-echo "  - $PROJECT_ROOT/.claude (copied from superpowers/dot-claude)"
+echo "Arsenal setup:"
+echo "  - $PROJECT_ROOT/.claude (copied from arsenal/dot-claude)"
 echo "  - $PROJECT_ROOT/.claude/hooks/session_start.py (SessionStart hook)"
 echo "  - $PROJECT_ROOT/.claude/settings.json (hook configuration)"
 echo "  - $PROJECT_ROOT/.pre-commit-scripts -> $SUPERPOWERS_DIR/pre-commit-scripts (symlink)"
-echo "  - $PROJECT_ROOT/CLAUDE.md (copied from superpowers/system-prompts/CLAUDE.md)"
-echo "  - $PROJECT_ROOT/AGENTS.md (copied from superpowers/system-prompts/AGENTS.md)"
-echo "  - $PROJECT_ROOT/api/tests/AGENTS.md (copied from superpowers/system-prompts/testing/AGENTS.md)"
+echo "  - $PROJECT_ROOT/CLAUDE.md (copied from arsenal/system-prompts/CLAUDE.md)"
+echo "  - $PROJECT_ROOT/AGENTS.md (copied from arsenal/system-prompts/AGENTS.md)"
+echo "  - $PROJECT_ROOT/api/tests/AGENTS.md (copied from arsenal/system-prompts/testing/AGENTS.md)"
 echo ""
 
 # Check if .env was created
 if [ -f "$SUPERPOWERS_ENV" ]; then
     echo -e "${GREEN}Environment configuration:${NC}"
-    echo "  - superpowers/.env (edit this file to configure API keys)"
+    echo "  - arsenal/.env (edit this file to configure API keys)"
     echo ""
 fi
 
 # Check if semantic code search was set up
-if docker ps | grep -q superpowers-semantic-search-cli; then
+if docker ps | grep -q arsenal-semantic-search-cli; then
     echo -e "${GREEN}Semantic code search is ready!${NC}"
-    echo "  Usage: docker exec superpowers-semantic-search-cli code-search find \"your search query\""
-    echo "  Stats: docker exec superpowers-semantic-search-cli code-search stats"
-    echo "  Reindex: docker exec superpowers-semantic-search-cli code-search index /project --clear"
+    echo "  Usage: docker exec arsenal-semantic-search-cli code-search find \"your search query\""
+    echo "  Stats: docker exec arsenal-semantic-search-cli code-search stats"
+    echo "  Reindex: docker exec arsenal-semantic-search-cli code-search index /project --clear"
     echo ""
 fi
 
-echo "To update from superpowers (CLAUDE.md/AGENTS.md/.claude/.pre-commit-scripts): re-run ./superpowers/install.sh"
-echo "To edit patterns: modify files in superpowers/system-prompts/ then re-run install.sh to sync"
-echo "To manage superpowers services: cd superpowers && docker-compose up -d"
+echo "To update from arsenal (CLAUDE.md/AGENTS.md/.claude/.pre-commit-scripts): re-run ./arsenal/install.sh"
+echo "To edit patterns: modify files in arsenal/system-prompts/ then re-run install.sh to sync"
+echo "To manage arsenal services: cd arsenal && docker-compose up -d"

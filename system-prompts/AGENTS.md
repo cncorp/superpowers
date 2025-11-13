@@ -42,35 +42,35 @@ Common failure modes to AVOID:
 
 This file provides guidance to our AI coding agents (e.g., Claude Code and Codex CLI) when working with code in this repository.
 
-## 🚀 Installing Superpowers
+## 🚀 Installing Arsenal
 
-**When users ask to "install superpowers" or "set up superpowers":**
+**When users ask to "install arsenal" or "set up arsenal":**
 
 ```bash
 # 1. Ensure submodule is initialized (skip if already done)
 git submodule update --init --recursive
 
 # 2. Run install script (handles .env setup automatically)
-./superpowers/install.sh
+./arsenal/install.sh
 
 # 3. Start Docker services (optional - for semantic-code-search skill)
-cd superpowers && docker-compose up -d
+cd arsenal && docker-compose up -d
 ```
 
 **The install script automatically:**
 - Creates symlinks for `.claude`, `.pre-commit-scripts`, and `AGENTS.md` files
 - Installs Node.js dependencies (playwright-tester, etc.)
-- Sets up `superpowers/.env` and offers to copy OPENAI_API_KEY from `api/.env`
+- Sets up `arsenal/.env` and offers to copy OPENAI_API_KEY from `api/.env`
 
-## 🔄 Updating Superpowers
+## 🔄 Updating Arsenal
 
-**When users ask "Do I have any new superpowers?" or "Check for superpowers updates":**
+**When users ask "Do I have any new tools in my arsenal?" or "Check for arsenal updates":**
 
 Run these commands to check for and install updates:
 
 ```bash
-# Navigate to the superpowers submodule
-cd superpowers
+# Navigate to the arsenal submodule
+cd arsenal
 
 # Fetch and show what's new
 git fetch origin
@@ -84,10 +84,10 @@ git pull origin main
 
 # Run the install script to update symlinks and dependencies
 cd ..
-./superpowers/install.sh
+./arsenal/install.sh
 
 # Verify the update
-cd superpowers && git log --oneline -1
+cd arsenal && git log --oneline -1
 ```
 
 **What to tell the user:**
@@ -96,7 +96,7 @@ cd superpowers && git log --oneline -1
 - Mention any breaking changes or important notes from commit messages
 - After updating, list what new capabilities they now have access to
 
-**Available Superpowers:**
+**Available Tools in Your Arsenal:**
 - **Agents**: Auto-invoked specialized agents (git-reader, pytest-test-reviewer, mypy-error-fixer, test-fixture-reviewer, task-complete-enforcer)
 - **Commands**: Slash commands like `/buildit`, `/planit`, `/review-code`, `/mypy`, `/research`, and more
 - **Skills**: Specialized capabilities (langfuse-prompt-viewer, playwright-tester, docker-log-debugger, test-runner, twilio-test-caller)

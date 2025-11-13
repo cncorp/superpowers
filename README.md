@@ -1,4 +1,4 @@
-# Superpowers
+# Arsenal
 
 Reusable Claude Code agents, commands, skills, and patterns for your projects.  Inspired by [Jesse Vincent](https://blog.fsck.com/2025/10/09/superpowers/).
 
@@ -9,23 +9,23 @@ Reusable Claude Code agents, commands, skills, and patterns for your projects.  
 git submodule update --init --recursive
 
 # 2. Run install script (handles .env setup automatically)
-./superpowers/install.sh
+./arsenal/install.sh
 
 # 3. Start Docker services (optional - for semantic-code-search)
-cd superpowers && docker-compose up -d
+cd arsenal && docker-compose up -d
 ```
 
 **The install script automatically:**
 - Creates symlinks for `.claude`, `.pre-commit-scripts`, and `AGENTS.md` files
 - Installs Node.js dependencies (playwright-tester, etc.)
-- Sets up `superpowers/.env` and offers to copy OPENAI_API_KEY from `api/.env`
+- Sets up `arsenal/.env` and offers to copy OPENAI_API_KEY from `api/.env`
 
-**Adding to a new repository:** `git submodule add git@github.com:cncorp/superpowers.git superpowers` then follow above.
+**Adding to a new repository:** `git submodule add git@github.com:cncorp/arsenal.git arsenal` then follow above.
 
 ## Structure
 
 ```
-superpowers/
+arsenal/
 ├── dot-claude/           # Claude Code configurations
 │   ├── agents/          # Custom agents (mypy-error-fixer, pytest-test-reviewer, etc.)
 │   ├── commands/        # Slash commands (/buildit, /planit, /review-code, etc.)

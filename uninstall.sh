@@ -7,7 +7,7 @@ GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 NC='\033[0m' # No Color
 
-echo -e "${YELLOW}Uninstalling Superpowers symlinks...${NC}\n"
+echo -e "${YELLOW}Uninstalling Arsenal symlinks...${NC}\n"
 
 # Get the directory where this script lives
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -72,5 +72,5 @@ fi
 
 echo -e "\n${GREEN}✓ Uninstallation complete!${NC}"
 echo ""
-echo "Note: This only removes symlinks. The superpowers submodule remains."
-echo "To fully remove superpowers, run: git submodule deinit superpowers && git rm superpowers"
+echo "Note: This only removes symlinks. The arsenal submodule remains."
+echo "To fully remove arsenal, run: git submodule deinit arsenal && git rm arsenal"
