@@ -28,9 +28,124 @@ Skills teach you proven, battle-tested patterns for common tasks. They prevent:
 - Missing critical debugging tools
 - Repeating mistakes from previous sessions
 
-## 🚨 BANNED PHRASES - NEVER SAY THESE
+## 🚨 BANNED ACTIONS - NEVER DO THESE
 
-**The following phrases are FORBIDDEN unless you have completed the specified conditions:**
+**The following actions are FORBIDDEN unless you have completed the specified conditions:**
+
+### ❌ Writing OR MODIFYING tests without test-writer skill
+**ABSOLUTELY BANNED.**
+
+You CANNOT write OR MODIFY test code without:
+1. Using the test-writer skill
+2. Following the step-by-step analysis (code type, dependencies, contract)
+3. Presenting analysis to user
+4. Writing tests following the patterns
+
+**If you write tests without test-writer skill:**
+- You will write brittle tests with hardcoded library outputs
+- You will create self-evident tests (x = y; assert x == y)
+- You will test library behavior instead of YOUR code's contract
+- You will use fixtures incorrectly
+
+**If you MODIFY tests without test-writer skill:**
+- You may change tests to make broken code pass (catastrophic)
+- You may weaken test contracts without realizing it
+- You may hide bugs instead of finding them
+- You may change user-facing behavior without documenting it
+
+**The penalty for violating this:**
+- All your tests must be rewritten
+- You waste user time with bad tests
+- You create technical debt
+- You ship bugs by weakening test coverage
+
+**THERE IS NO EXCEPTION. EVERY TEST. EVERY TIME.**
+
+### ❌ Modifying tests to make broken code pass
+**CATASTROPHICALLY BANNED.**
+
+**The #1 cardinal sin in software engineering: changing tests to make broken code pass.**
+
+**When tests fail after your changes:**
+
+1. **DEFAULT ASSUMPTION: Your code broke the contract**
+   - Tests passing before + your changes + tests failing = you broke it
+   - The test is telling you the truth: your code violates the contract
+
+2. **BEFORE modifying ANY test, ask yourself:**
+   - "Did my code break the existing contract?"
+   - "Or does the contract legitimately need to change?"
+   - "What user-facing behavior is changing?"
+
+3. **THINK HARD. Really hard.**
+   - Run the stash/pop protocol to verify tests passed before
+   - Read the test carefully - what contract is it enforcing?
+   - Is the failing assertion protecting user-facing behavior?
+   - Is this a business rule that should NOT change?
+
+4. **IF the contract legitimately needs to change:**
+   - Use the test-writer skill to analyze the change
+   - Document what user-facing behavior is changing
+   - Get user confirmation BEFORE changing the test
+   - **ALWAYS respond with "TEST CONTRACT CHANGED:" header**
+
+**MANDATORY FORMAT when changing test expectations:**
+
+```
+TEST CONTRACT CHANGED:
+
+Old contract: [what the test enforced before]
+New contract: [what the test enforces now]
+User impact: [how this changes behavior for end users]
+Rationale: [why this contract change is necessary]
+```
+
+**Example - GOOD contract change:**
+```
+TEST CONTRACT CHANGED:
+
+Old contract: Phone numbers must include country code (+1)
+New contract: Phone numbers accept US format without country code (555-1234)
+User impact: Users can now enter local US numbers without +1 prefix
+Rationale: User feedback showed +1 requirement was confusing for US users
+```
+
+**Example - BAD (hidden bug):**
+```
+# ❌ BANNED - weakening test to make code pass
+# Old test:
+assert result.startswith("America/")  # Contract: US phones → US timezones
+
+# Your broken change:
+assert result is not None  # ❌ Weakened contract to make broken code pass!
+```
+
+**Violations that will get caught:**
+- ❌ Changing assertions without "TEST CONTRACT CHANGED:" response
+- ❌ Weakening assertions to make code pass (assert X → assert True)
+- ❌ Removing test cases that "fail with my changes"
+- ❌ Adding try/except to tests to hide failures
+- ❌ Skipping tests that fail
+- ❌ Changing mock return values without understanding why the test expects them
+
+**The nuanced reality:**
+
+When tests fail AFTER you write code (not TDD):
+- **~50% of the time**: The test is legitimately outdated and needs updating (contract changed)
+- **~50% of the time**: Your code has a bug and violates the existing contract
+
+**The danger:** Updating tests to encode the bug instead of fixing the code.
+
+**The forcing function:** The "TEST CONTRACT CHANGED:" announcement forces you to articulate what changed and WHY. If you can't clearly explain the user impact and rationale, you're probably encoding a bug.
+
+**Best practice (TDD):**
+- Write tests FIRST to the new expectation → tests fail → write code → tests pass
+- This avoids the 50/50 problem entirely because tests are written to the correct contract from the start
+
+**When modifying tests AFTER code is written:**
+- ALWAYS use "TEST CONTRACT CHANGED:" to make the change explicit
+- This transparency reveals whether the change is legitimate or hiding a bug
+- If you can't articulate clear user impact → fix your code instead
 
 ### ❌ "All tests pass" / "All tests passing" / "Tests pass"
 **BANNED unless you have:**
@@ -84,6 +199,7 @@ ls .claude/skills/
 - "Is there a skill for this?"
 - "Have I checked `.claude/skills/` for relevant guidance?"
 - "Am I following the mandatory workflow?"
+- **"Am I about to write test code?"** → If YES, STOP and use test-writer skill FIRST
 
 ## Required Workflow
 
@@ -95,9 +211,107 @@ ls .claude/skills/
 4. **Follow it exactly:** No shortcuts, no assumptions
 5. **Verify completion:** Run the commands, see the output
 
+**🚨 SPECIAL WORKFLOW FOR TEST WRITING AND MODIFICATION:**
+
+**IF you are about to write OR MODIFY ANY of these:**
+- `def test_*` (any test function)
+- `class Test*` (any test class)
+- Any code in a file named `test_*.py`
+- Any code in `tests/` directory
+- Any assertion in existing tests
+- Any test expectations or mock return values
+
+**THEN you MUST:**
+1. STOP - Do not write OR MODIFY ANY test code yet
+2. Read `.claude/skills/test-writer/SKILL.md`
+3. Follow the 12-step analysis workflow
+4. If MODIFYING: Understand what contract is changing and why
+5. Present analysis to user with "TEST CONTRACT CHANGED:" if modifying expectations
+6. Get user confirmation
+7. ONLY THEN write/modify test code
+8. Invoke pytest-test-reviewer agent after
+
+**BANNED:** Writing OR MODIFYING `def test_*` or `class Test*` without using test-writer skill first
+
 **This workflow is MANDATORY. Violations will be caught through pressure testing.**
 
 ## Available Skills
+
+### 🔥 test-writer (CRITICAL)
+**MANDATORY for ALL test writing AND modification**
+
+**🚨 YOU CANNOT WRITE OR MODIFY TESTS WITHOUT THIS SKILL 🚨**
+
+**WHEN TO USE (Automatic Triggers):**
+
+You MUST use this skill if ANY of these are true:
+1. **About to write `def test_*`** - Any test function
+2. **About to write `class Test*`** - Any test class
+3. **Creating/editing `test_*.py`** - Any test file
+4. **Working in `tests/` directory** - Any test code
+5. **User says:** "write tests" OR "add tests" OR "test this" OR "add coverage"
+6. **You think:** "I should test this function/class/module"
+7. **MODIFYING existing test assertions** - Changing what tests expect
+8. **MODIFYING mock return values** - Changing test setup/fixtures
+9. **Tests fail after your code changes** - Need to understand if code or contract broke
+10. **User says:** "fix the tests" OR "update the tests" OR "tests are failing"
+
+**IF ANY TRIGGER ABOVE → STOP → USE TEST-WRITER SKILL FIRST**
+
+Where: `.claude/skills/test-writer/SKILL.md`
+
+**Example queries that trigger test-writer:**
+- "Write tests for the timezone utility"
+- "Add test coverage for authentication logic"
+- "Test the new webhook handler"
+- "I need tests for this function"
+- "Can you add some tests?"
+- "Let's make sure this works with tests"
+- **"Fix the failing tests"** (MODIFICATION)
+- **"Update the tests for the new behavior"** (MODIFICATION)
+- **"The tests are failing, can you fix them?"** (MODIFICATION)
+
+**YOU MUST:**
+- Use the test-writer skill BEFORE writing OR modifying ANY test code
+- Follow the step-by-step analysis (code type, dependencies, contract, etc.)
+- **If MODIFYING:** Determine if code broke or contract changed
+- **If MODIFYING assertions:** Use "TEST CONTRACT CHANGED:" format
+- Present analysis to user before writing/modifying tests
+- Get user confirmation on approach
+- Write/modify tests following the patterns in the skill
+- Invoke pytest-test-reviewer agent after writing/modifying tests
+
+**Critical violations:**
+- ❌ **BANNED:** Writing tests without using test-writer skill
+- ❌ **BANNED:** MODIFYING tests without using test-writer skill
+- ❌ **BANNED:** Changing assertions without "TEST CONTRACT CHANGED:" announcement
+- ❌ **BANNED:** Weakening test contracts to make code pass
+- ❌ **BANNED:** Hardcoding external library outputs (brittle)
+- ❌ **BANNED:** Writing self-evident tests (x = y; assert x == y)
+- ❌ **BANNED:** Testing library behavior instead of YOUR code's contract
+- ❌ **BANNED:** Using fixtures for simple primitives (strings, dicts <5 fields)
+- ❌ **BANNED:** Creating multiple fixture variants instead of factory with overrides
+- ❌ **BANNED:** Technical docstrings instead of business value
+
+**The Golden Rule:**
+Before writing any test, ask: "If this test fails, what business requirement did we break?"
+If you can't answer clearly, don't write the test.
+
+**What will happen if you write tests without this skill:**
+- Brittle tests that break when libraries update
+- Self-evident tests that waste time
+- Wrong fixture usage (overuse for simple, underuse for complex)
+- Testing phonenumbers/pytz behavior instead of YOUR wrapper's contract
+- Tests that provide zero value
+
+**What will happen if you MODIFY tests without this skill:**
+- You will change tests to make broken code pass (catastrophic)
+- You will weaken contracts and ship bugs
+- You will hide broken behavior from users
+- You will change user-facing behavior without documentation
+- You will destroy the test suite's value as a safety net
+
+**This skill is NOT optional. This is NOT a suggestion. You MUST use it for ALL test writing AND modification.**
 
 ### 🔥 test-runner (CRITICAL)
 **MANDATORY after EVERY code change**

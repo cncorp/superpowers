@@ -76,6 +76,11 @@ Keep these files in sync by updating them in the `arsenal/` submodule and runnin
 
 **Pattern**: After you finish writing code, ALWAYS invoke the appropriate reviewer agent(s) before considering the work complete. Do not wait for the user to ask.
 
+**🚨 CRITICAL FOR TEST WRITING:**
+- **BEFORE writing tests** → Use test-writer skill (MANDATORY - analyzes code type, dependencies, contract)
+- **AFTER writing tests** → Invoke pytest-test-reviewer agent (validates patterns)
+- **YOU CANNOT WRITE TESTS WITHOUT test-writer SKILL** - No exceptions, no shortcuts, every test, every time
+
 ### Commands (`.claude/commands/`)
 
 **Commands are slash commands** that expand into prompts. Users can invoke them by typing `/command-name` in the chat.
@@ -102,6 +107,7 @@ Available commands include:
 
 **Available skills:**
 - **getting-started** — Bootstrap skill, READ FIRST every session
+- **test-writer** — 🚨 MANDATORY before writing ANY test code (YOU CANNOT WRITE TESTS WITHOUT THIS SKILL)
 - **test-runner** — MANDATORY after every code change (ruff → lint → tests)
 - **langfuse-prompt-and-trace-debugger** — MANDATORY when KeyError or schema errors occur. Views prompts and debugs traces from Langfuse servers (staging or production)
 - **update-langfuse-staging-server-prompt** — Push prompt updates to Langfuse STAGING SERVER ONLY (langfuse.staging.cncorp.io). Does NOT sync to production server
