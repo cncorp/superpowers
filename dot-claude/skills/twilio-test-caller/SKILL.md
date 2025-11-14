@@ -13,6 +13,19 @@ allowed-tools:
 
 Place test voice calls to validate voice conversation features end-to-end.
 
+## How It Works (Simple Version)
+
+1. **Script calls Twilio API** → Twilio places call FROM +18643997362 TO +16503977712
+2. **Twilio hits webhook** → +16503977712 is configured with webhook URL in Twilio console
+3. **Tailscale forwards** → Public HTTPS request → localhost:8084
+4. **Docker API receives** → FastAPI processes webhook, returns TwiML with WebSocket URL
+5. **Audio streams** → VAD + OpenAI Realtime process speech
+6. **You see logs** → `docker logs ct4-api-1` shows "Received Twilio voice webhook call_sid=CA..."
+
+**If you DON'T see logs in step 6 → something in the pipeline is broken.**
+
+**For detailed pipeline flow with all 12 steps, see the `run-voice-e2e` skill which includes a complete diagnostic table.**
+
 ## When to Use
 
 - User asks to place/test a call
@@ -94,24 +107,47 @@ for number in numbers:
     print(f\"Updated {number.phone_number}\")"'
 ```
 
-## Place Call
+## Place a Call (It's Simple)
 
-**Basic command (1 minute call):**
+**Basic command - just place the call:**
 ```bash
-docker compose exec api bash -lc 'cd /app/src/scripts && \
-set -a && source /app/.env && set +a && \
-uv run python twilio_place_call.py \
-  --from +18643997362 \
+cd api && set -a && source .env && set +a && \
+PYTHONPATH=src uv run python src/scripts/twilio_place_call.py \
   --to +16503977712 \
   --duration-minutes 1 \
-  --audio-url https://github.com/srosro/sample-audio/raw/refs/heads/main/lib3_mulaw.wav'
+  --audio-url https://github.com/srosro/personal-public/raw/refs/heads/main/lib3_mulaw.wav
 ```
 
+**That's it. If everything is configured correctly, you'll see logs in `docker logs ct4-api-1`.**
+
 **Parameters:**
-- `--from` - Twilio number (default: +18643997362)
-- `--to` - Recipient number (default: +16503977712)
-- `--duration-minutes` - Call length (default: 1, keep short)
-- `--audio-url` - Test audio URL
+- `--to` - Phone number to call (default: +16503977712 - Jake's test number)
+- `--from` - Calling from (default: +18643997362 - Abby's number)
+- `--duration-minutes` - How long to keep call active (default: 1 minute)
+- `--audio-url` - Test audio to play (MUST be .wav mulaw format for best results)
+
+**Audio URL Requirements:**
+- ✅ Use mulaw format: `lib3_mulaw.wav`
+- ❌ NOT static format: `lib3_converted.wav` (will sound like static)
+- 🔗 Recommended URL: `https://github.com/srosro/personal-public/raw/refs/heads/main/lib3_mulaw.wav`
+
+**Verify Interventions After Call:**
+After placing a call, verify that interventions were created by visiting the frontend:
+```
+http://100.93.144.78:5174/
+```
+
+**⚠️ PORT PATTERN:** The frontend port MUST match your directory number:
+- ct1 → http://100.93.144.78:5171/
+- ct2 → http://100.93.144.78:5172/
+- ct3 → http://100.93.144.78:5173/
+- ct4 → http://100.93.144.78:5174/ ← YOU ARE HERE
+
+This requires the vite dev server to be running. Start it with:
+```bash
+cd /home/odio/Hacking/codel/ct4/frontend && npm run dev
+```
+Vite will automatically use port 5174 (configured in vite.config.ts).
 
 ## Monitor Call
 
@@ -131,17 +167,40 @@ docker compose logs -f api worker
 docker compose logs --since 5m | grep -iE -B 5 -A 5 "call|voice|twilio"
 ```
 
-## Troubleshooting
+## Troubleshooting - Work Backwards
 
-| Problem | Solution |
-|---------|----------|
-| Script not found | Branch doesn't have voice features |
-| Docker not running | `docker compose up -d` |
-| Funnel not active | Use tailscale-manager skill to start funnel: `sudo tailscale funnel --https=443 8082` |
-| Call not received | **Most common!** Verify Twilio webhook points to Tailscale URL (see step 4 above) |
-| Call fails immediately | Check audio URL accessible: `curl -I <audio-url>` |
-| No transcription | Verify OPENAI_API_KEY in .env; check worker logs for Whisper calls |
-| No interventions | Fetch `voice_message_enricher` prompt; check intervention conditions in logs |
+**Call placed but NO LOGS in docker → Check in this order:**
+
+1. **Is Docker running?**
+   ```bash
+   docker compose ps
+   # All services should show "Up"
+   ```
+   Fix: `docker compose up -d`
+
+2. **Is Tailscale funnel active?**
+   ```bash
+   tailscale funnel status
+   # Should show: https://wakeup.tail... (Funnel on) |-- / proxy http://127.0.0.1:8084
+   ```
+   Fix: `tailscale funnel --https=443 8084`
+
+3. **Is webhook configured in Twilio?**
+   ```bash
+   # Check what webhook URL is set
+   set -a && source .env && set +a && python -c "
+   from twilio.rest import Client; import os
+   client = Client(os.getenv('TWILIO_ACCOUNT_SID'), os.getenv('TWILIO_AUTH_TOKEN'))
+   for n in client.incoming_phone_numbers.list(phone_number='+16503977712'):
+       print(f'Voice URL: {n.voice_url}')
+   "
+   ```
+   Expected: `https://wakeup.tail3b4b7f.ts.net/webhook/voice/twilio`
+
+**Call logs appear but NO VAD/transcription → Check:**
+- Audio URL is accessible: `curl -I <audio-url>` (should return 200 OK)
+- Worker is running: `docker compose ps | grep worker`
+- OpenAI API key set: `grep OPENAI_API_KEY .env`
 
 ## Quick Reference
 
