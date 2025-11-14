@@ -21,6 +21,45 @@ Use this skill when you need to:
 - Count records or check data integrity
 - Understand database structure and relationships
 
+## Database Selection: Production vs Development
+
+**CRITICAL: Always prefer PRODUCTION database for usage/analytics questions.**
+
+The `arsenal/.env` file should be configured with **production read-only credentials** by default.
+
+### When to Use Production Database (DEFAULT)
+- ✅ **User analytics**: "How many messages in the last day?"
+- ✅ **Usage patterns**: "Any requests for codel/wren?"
+- ✅ **Data investigation**: "What conversations exist?"
+- ✅ **Debugging user issues**: "Why didn't user X get a message?"
+- ✅ **Schema exploration**: Understanding production data model
+- ✅ **ANY question about real users or real usage**
+
+### When to Use Development Database (RARE)
+- ⚠️ **Code debugging only**: Testing migration scripts locally
+- ⚠️ **Local development**: Verifying local Docker database setup
+- ⚠️ **Test data verification**: Checking test fixtures
+
+### How to Switch Databases
+
+**Production (default):**
+```bash
+# arsenal/.env should have:
+PGHOST=codel-prod.cluster-crsis4w6ckj7.us-east-2.rds.amazonaws.com
+PGDATABASE=codelprod
+PGUSER=metabase_readonly_prod
+```
+
+**Development (only when explicitly needed):**
+```bash
+# Temporarily change arsenal/.env to:
+PGHOST=localhost
+PGDATABASE=codel
+PGUSER=codel
+```
+
+**⚠️ WARNING:** Always switch back to production credentials after development queries.
+
 ## Data Model Quickstart (Run These First!)
 
 **IMPORTANT**: When first exploring the database or debugging an issue, **ALWAYS run these 6 quickstart commands** to understand the data model:
