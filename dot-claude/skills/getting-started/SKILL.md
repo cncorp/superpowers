@@ -28,6 +28,32 @@ Skills teach you proven, battle-tested patterns for common tasks. They prevent:
 - Missing critical debugging tools
 - Repeating mistakes from previous sessions
 
+## 🚨 BANNED PHRASES - NEVER SAY THESE
+
+**The following phrases are FORBIDDEN unless you have completed the specified conditions:**
+
+### ❌ "All tests pass" / "All tests passing" / "Tests pass"
+**BANNED unless you have:**
+1. Run `.claude/skills/test-runner/scripts/run_tests_parallel.sh`
+2. Checked ALL log files for failures
+3. Verified mocked + e2e-live + smoke ALL passed
+
+**You MAY say:**
+- ✅ "Quick tests pass" (after `just test-all-mocked`)
+- ✅ "Mocked tests pass" (after `just test-all-mocked`)
+- ✅ "Unit tests pass" (after `just test-unit`)
+
+**The phrase "all tests" requires running the FULL parallel suite.**
+
+### Why This Matters
+Saying "all tests pass" when you only ran Step 2 (mocked tests) is a **critical violation** that:
+- Misleads the user about code quality
+- Ships bugs to production
+- Wastes reviewer time
+- Violates the mandatory test-runner skill
+
+**If you catch yourself about to say "all tests pass", STOP and run the parallel script first.**
+
 ## CRITICAL: Announce Skill Usage
 
 **When you use a skill, ANNOUNCE it to the user.**

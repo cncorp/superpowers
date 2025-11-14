@@ -397,6 +397,55 @@ ORDER BY m.provider_timestamp DESC
 LIMIT 10;
 ```
 
+### Get User Reactions
+
+**CRITICAL Schema Gotcha:** Reactions are stored as SEPARATE message records, NOT as arrays on the original message!
+
+Each reaction creates a new message with:
+- `provider_data->>'reaction_id'` set to a unique ID
+- `content` starting with the reaction type: "Liked", "Loved", "Disliked", "Laughed at", "Emphasized", "Questioned"
+
+```sql
+-- Find all reactions in 1:1 conversations
+SELECT
+  CASE
+    WHEN m.content LIKE 'Liked %' THEN 'Liked'
+    WHEN m.content LIKE 'Loved %' THEN 'Loved'
+    WHEN m.content LIKE 'Disliked %' THEN 'Disliked'
+    WHEN m.content LIKE 'Laughed at %' THEN 'Laughed at'
+    WHEN m.content LIKE 'Emphasized %' THEN 'Emphasized'
+    WHEN m.content LIKE 'Questioned %' THEN 'Questioned'
+  END as reaction_type,
+  m.provider_data->>'reaction_id' as reaction_id,
+  m.content,
+  c.type as conversation_type,
+  m.created_at
+FROM message m
+JOIN conversation c ON m.conversation_id = c.id
+WHERE m.provider_data->>'reaction_id' IS NOT NULL
+  AND c.type = 'ONE_ON_ONE'  -- or 'GROUP'
+ORDER BY m.created_at DESC
+LIMIT 20;
+```
+
+```sql
+-- Count reactions by type
+SELECT
+  CASE
+    WHEN m.content LIKE 'Liked %' THEN '👍 Liked'
+    WHEN m.content LIKE 'Loved %' THEN '❤️ Loved'
+    WHEN m.content LIKE 'Disliked %' THEN '👎 Disliked'
+    WHEN m.content LIKE 'Laughed at %' THEN '😂 Laughed at'
+  END as reaction_type,
+  COUNT(*) as count
+FROM message m
+JOIN conversation c ON m.conversation_id = c.id
+WHERE m.provider_data->>'reaction_id' IS NOT NULL
+  AND c.type = 'ONE_ON_ONE'
+GROUP BY reaction_type
+ORDER BY count DESC;
+```
+
 ### Get Message Enrichment Data
 
 The `message_enrichment` table contains AI classifications:
@@ -428,6 +477,7 @@ ORDER BY m.provider_timestamp;
 3. **Message→Person join:** Goes through `person_contacts` table: `message.sender_person_contact_id → person_contacts.id → person_contacts.person_id → persons.id`
 4. **Couples:** `conversation.type = 'GROUP'` and `conversation_participant.role = 'MEMBER'` (should have exactly 2 members)
 5. **Message enrichment:** Not all messages have enrichment data - use LEFT JOIN
+6. **Reactions:** Stored as SEPARATE message records (not arrays). Look for messages where `provider_data->>'reaction_id' IS NOT NULL`. Content starts with "Liked", "Loved", "Disliked", "Laughed at", etc.
 
 ### Get database overview
 ```sql

@@ -9,6 +9,17 @@ allowed-tools:
 
 # Test Runner - MANDATORY WORKFLOW
 
+╔══════════════════════════════════════════════════════════════════════════╗
+║  🚨 BANNED PHRASE: "All tests pass"                                     ║
+║                                                                          ║
+║  You CANNOT say "all tests pass" unless you:                            ║
+║  1. Run `.claude/skills/test-runner/scripts/run_tests_parallel.sh`     ║
+║  2. Check ALL log files (mocked + e2e-live + smoke)                     ║
+║  3. Verify ZERO failures across all suites                              ║
+║                                                                          ║
+║  `just test-all-mocked` = "quick tests pass" (NOT "all tests pass")    ║
+╚══════════════════════════════════════════════════════════════════════════╝
+
 ## 🔥 CRITICAL: This Skill Is Not Optional
 
 **After EVERY code change, you MUST follow this workflow.**
