@@ -307,6 +307,89 @@ WHERE column_name LIKE '%_id'
 ORDER BY table_name, column_name;
 ```
 
+## Relationship Coaching Schema Patterns
+
+Common patterns when working with relationship coaching data:
+
+### Find a Couple by Names
+
+**Problem:** Multiple people can have the same name (e.g., multiple "Daniel" or "Camily" users).
+
+**Solution:** Join through `conversation_participant` to find couples, rank by message count:
+
+```sql
+-- Find a couple by names (handles duplicate names)
+SELECT
+  c.id AS conversation_id,
+  p1.id AS person1_id, p1.name AS person1_name,
+  p2.id AS person2_id, p2.name AS person2_name,
+  COUNT(DISTINCT m.id) AS message_count
+FROM conversation c
+JOIN conversation_participant cp1 ON cp1.conversation_id = c.id
+JOIN persons p1 ON cp1.person_id = p1.id
+JOIN conversation_participant cp2 ON cp2.conversation_id = c.id
+JOIN persons p2 ON cp2.person_id = p2.id
+LEFT JOIN message m ON m.conversation_id = c.id
+WHERE c.type = 'GROUP'
+  AND cp1.role = 'MEMBER' AND cp2.role = 'MEMBER'
+  AND cp1.person_id < cp2.person_id
+  AND (LOWER(p1.name) LIKE '%daniel%' AND LOWER(p2.name) LIKE '%camily%')
+GROUP BY c.id, p1.id, p1.name, p2.id, p2.name
+ORDER BY message_count DESC;
+```
+
+### Join Messages to People
+
+**Schema gotcha:** Messages link to `person_contacts`, not directly to `persons`.
+
+```sql
+-- Get messages with sender names
+SELECT
+  m.id,
+  m.content,  -- NOTE: Use 'content' not 'body'
+  m.provider_timestamp,
+  p.name AS sender_name,
+  p.id AS sender_person_id
+FROM message m
+JOIN person_contacts pc ON m.sender_person_contact_id = pc.id
+JOIN persons p ON pc.person_id = p.id
+WHERE m.conversation_id = {{conversation_id}}
+ORDER BY m.provider_timestamp DESC
+LIMIT 10;
+```
+
+### Get Message Enrichment Data
+
+The `message_enrichment` table contains AI classifications:
+
+```sql
+-- View messages with affect and conflict classifications
+SELECT
+  m.id,
+  m.provider_timestamp,
+  p.name AS sender,
+  m.content,
+  me.affect,           -- Partner-Affection, Partner-Contempt, etc.
+  me.conflict_state,   -- 'New Conflict', 'Escalation', 'No conflict', etc.
+  me.subject,          -- 'Partner', 'Self', 'Other'
+  me.topic             -- 'Housework criticism', 'Planning', etc.
+FROM message m
+JOIN person_contacts pc ON m.sender_person_contact_id = pc.id
+JOIN persons p ON pc.person_id = p.id
+LEFT JOIN message_enrichment me ON me.message_id = m.id
+WHERE m.conversation_id = {{conversation_id}}
+  AND m.provider_timestamp >= CURRENT_DATE - INTERVAL '56 days'
+ORDER BY m.provider_timestamp;
+```
+
+### Schema Gotchas to Remember
+
+1. **Message content column:** Use `message.content`, not `message.body` (doesn't exist)
+2. **Person lookup:** Multiple people can have identical names - always join through `conversation_participant` to identify couples
+3. **Message→Person join:** Goes through `person_contacts` table: `message.sender_person_contact_id → person_contacts.id → person_contacts.person_id → persons.id`
+4. **Couples:** `conversation.type = 'GROUP'` and `conversation_participant.role = 'MEMBER'` (should have exactly 2 members)
+5. **Message enrichment:** Not all messages have enrichment data - use LEFT JOIN
+
 ### Get database overview
 ```sql
 -- Table count and total size
