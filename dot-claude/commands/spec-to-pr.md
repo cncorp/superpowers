@@ -31,14 +31,16 @@ Use this command to implement a feature spec:
 **Option A: Auto-find most recent spec**
 ```bash
 /spec-to-pr
-→ Finds most recent specs/YYYY-MM-DD-*.md
+→ Finds most recent *-YYYY-MM-DD.md in project root
 ```
 
 **Option B: Specify spec file**
 ```bash
-/spec-to-pr specs/user-feedback-2025-11-14.md
+/spec-to-pr user-feedback-2025-11-14.md
 → Uses the specified file
 ```
+
+**IMPORTANT:** Spec will be automatically copied to `docs/specifications/` and committed with the PR.
 
 ### Step 1: Read and Understand the Spec
 
@@ -180,7 +182,21 @@ cd api && just test-all-mocked
 
 **DO NOT create PR if quality checks fail.**
 
-### Step 5: Create GitHub PR
+### Step 5: Copy Spec to docs/specifications/
+
+**IMPORTANT: Specs must be committed to the repository as part of the PR.**
+
+```bash
+# Copy spec from top-level to docs/specifications/
+cp {spec-file} docs/specifications/
+
+# Example:
+cp user-feedback-2025-11-14.md docs/specifications/
+```
+
+This ensures the spec is version-controlled with the implementation.
+
+### Step 6: Create GitHub PR
 
 **Use git commands to create PR:**
 
@@ -189,14 +205,14 @@ cd api && just test-all-mocked
    git checkout -b feature/{feature-slug}
    ```
 
-2. **Stage and commit changes:**
+2. **Stage and commit changes (including spec):**
    ```bash
-   git add {files changed}
+   git add {files changed} docs/specifications/{spec-filename}
    git commit -m "{commit message}
 
    {Brief description of changes}
 
-   Implements: specs/{YYYY-MM-DD-feature-slug}.md
+   Implements: docs/specifications/{YYYY-MM-DD-feature-slug}.md
 
    🤖 Generated with Claude Code
    Co-Authored-By: Claude <noreply@anthropic.com>"
@@ -214,7 +230,7 @@ cd api && just test-all-mocked
      --body "$(cat <<'EOF'
    ## Feature: {Title}
 
-   **Spec:** specs/{YYYY-MM-DD-feature-slug}.md
+   **Spec:** docs/specifications/{YYYY-MM-DD-feature-slug}.md
    **Priority:** {P0/P1/P2/P3}
    **Effort:** {XS/S/M/L/XL}
 
@@ -245,9 +261,9 @@ cd api && just test-all-mocked
 
 5. **Capture PR URL**
 
-### Step 6: Update Spec File
+### Step 7: Update Spec File
 
-Append to the spec file:
+Append to BOTH spec files (top-level and docs/specifications/):
 
 ```markdown
 ---
@@ -266,14 +282,18 @@ Append to the spec file:
 3. Merge when ready
 ```
 
-### Step 7: Output Summary
+**Update both:**
+- Top-level spec file (for local reference)
+- `docs/specifications/{spec-filename}` (committed version)
+
+### Step 8: Output Summary
 
 **For cron job logs:**
 
 ```
 ✅ PR created from spec
 
-📋 Spec: specs/2025-11-14-7-day-streak.md
+📋 Spec: docs/specifications/user-feedback-2025-11-14.md (committed with PR)
 🎯 Feature: Build 7-day streak for new users
 ⚙️ Priority: P1 (High)
 📏 Effort: M (1 sprint)
@@ -282,6 +302,7 @@ Append to the spec file:
 - Modified 3 files
 - Created 2 new files
 - Added 15 tests
+- Committed spec to docs/specifications/
 
 ✅ Quality checks:
 - Formatting: ✅ Pass
@@ -347,7 +368,7 @@ PR created: https://github.com/odio/ct3/pull/456
 
 ✅ PR created from spec
 
-📋 Spec: specs/user-feedback-2025-11-14.md
+📋 Spec: docs/specifications/user-feedback-2025-11-14.md (committed)
 🎯 Feature: Build 7-day streak for new users
 🔀 PR: https://github.com/odio/ct3/pull/456
 
@@ -358,16 +379,19 @@ Next: Review and merge PR
 ### Example 2: Specify spec file
 
 ```bash
-$ claude -p "/spec-to-pr specs/funnel-2025-11-13.md"
+$ claude -p "/spec-to-pr funnel-2025-11-13.md"
 
 Reading spec: "Fix partner invitation email delivery"
 Priority: P0 (Critical), Effort: S (1-2 days)
+
+Copying spec to docs/specifications/...
+✅ Spec copied to docs/specifications/funnel-2025-11-13.md
 
 [Implementation workflow...]
 
 ✅ PR created from spec
 
-📋 Spec: specs/funnel-2025-11-13.md
+📋 Spec: docs/specifications/funnel-2025-11-13.md (committed)
 🎯 Feature: Fix partner invitation email delivery
 🔀 PR: https://github.com/odio/ct3/pull/455
 
@@ -379,14 +403,13 @@ Next: Review and merge PR immediately (P0)
 
 ### Spec File Location
 ```bash
-# Default: Find most recent in specs/
+# Default: Find most recent in current directory
 /spec-to-pr
 
 # Specify file (deterministic filename for cron)
-/spec-to-pr specs/user-feedback-2025-11-14.md
+/spec-to-pr user-feedback-2025-11-14.md
 
-# Specify directory
-/spec-to-pr --spec-dir=archived-specs/
+# Spec will be automatically copied to docs/specifications/ and committed with the PR
 ```
 
 ### Branch Naming
@@ -407,27 +430,27 @@ Next: Review and merge PR immediately (P0)
 ```
 ❌ Spec file not found
 
-Searched: specs/
-No specs found matching YYYY-MM-DD-*.md
+Searched: ./ (project root)
+No specs found matching *-YYYY-MM-DD.md
 
 Did you mean:
 - Run /question-to-spec first to create a spec
-- Specify file: /spec-to-pr path/to/spec.md
+- Specify file: /spec-to-pr spec-filename.md
 ```
 
 ### Multiple Recent Specs
 **Action:** Implement the most recent, list others
 ```
 Found 3 specs from today:
-1. specs/user-feedback-2025-11-14.md (most recent)
-2. specs/funnel-2025-11-14.md
-3. specs/retention-2025-11-14.md
+1. user-feedback-2025-11-14.md (most recent)
+2. funnel-2025-11-14.md
+3. retention-2025-11-14.md
 
-Implementing most recent: specs/user-feedback-2025-11-14.md
+Implementing most recent: user-feedback-2025-11-14.md
 
 To implement others:
-- /spec-to-pr specs/funnel-2025-11-14.md
-- /spec-to-pr specs/retention-2025-11-14.md
+- /spec-to-pr funnel-2025-11-14.md
+- /spec-to-pr retention-2025-11-14.md
 ```
 
 ### Quality Checks Fail
@@ -471,12 +494,14 @@ After migration is created, re-run: /spec-to-pr
 
 ## Notes
 
+- **Specs are committed:** Always copy spec to docs/specifications/ and include in PR
 - **Code quality matters:** Always run test-runner before creating PR
 - **Follow existing patterns:** Look at similar code in the codebase
 - **Don't over-engineer:** Implement exactly what the spec says (no extras)
 - **Type everything:** All functions need type hints
 - **Test thoroughly:** Cover happy path + edge cases from spec
-- **Commit messages:** Include spec reference and emoji
-- **PR descriptions:** Link to spec, include summary, list changes
+- **Commit messages:** Include spec reference (docs/specifications/) and emoji
+- **PR descriptions:** Link to spec in docs/specifications/, include summary, list changes
+- **Both copies updated:** Update both top-level spec (local) and docs/specifications/ (committed) with PR info
 
-Remember: The goal is to turn a **feature spec** into **working code** with a **reviewable PR**.
+Remember: The goal is to turn a **feature spec** into **working code** with a **reviewable PR** that includes the spec in version control.
