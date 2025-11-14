@@ -187,6 +187,53 @@ When to use: Testing voice features and call flows
 Where: `.claude/skills/twilio-test-caller/SKILL.md`
 **Dependencies:** Requires tailscale-manager skill (funnel must be running)
 
+### sql-reader
+**Query production PostgreSQL database with read-only credentials**
+
+When to use: Investigating data issues, debugging application state, analyzing user data
+Where: `.claude/skills/sql-reader/SKILL.md`
+
+**YOU MUST:**
+- Always run the 6 Data Model Quickstart commands first
+- Use the helper script: `arsenal/dot-claude/skills/sql-reader/connect.sh`
+- Read-only access - safe for production queries
+- Check schema migrations (intervention tracking changed Aug 27, person_facts changed Aug 28)
+
+**Violations:**
+- ❌ Guessing at table names without running quickstart
+- ❌ Not checking for schema migrations when querying historical data
+- ❌ Forgetting that messages join through person_contacts table
+
+### therapist-data-scientist
+**Calculate Gottman SPAFF affect ratios and therapeutic insights**
+
+When to use: Analyzing relationship coaching data, calculating affect ratios, generating insights
+Where: `.claude/skills/therapist-data-scientist/SKILL.md`
+
+**Note:** Employee-facing tool for HIPAA-certified team members only
+
+### linear-manager
+**Create, update, search, and manage Linear issues**
+
+When to use: Creating issues for bugs/features, updating issue status, searching issues, adding comments
+Where: `.claude/skills/linear-manager/SKILL.md`
+
+**YOU MUST:**
+- Run `get_teams.sh` first to find your team ID
+- Announce usage: "I'm using the linear-manager skill to..."
+- Use helper scripts (get_issue.sh, create_issue.sh, etc.)
+- Include issue URLs in responses
+
+**Common workflows:**
+- Creating issues: Use create_issue.sh with --title, --team-id, --description
+- Working on tickets: Use get_issue.sh to fetch details, update_issue.sh to change status
+- After completing work: Add comment with add_comment.sh, mark done with update_issue.sh
+
+**Violations:**
+- ❌ Creating issues without getting team ID first
+- ❌ Not including issue URL in response to user
+- ❌ Forgetting to update issue status when work is complete
+
 ## Enforcement: You Will Be Tested
 
 **Skills are tested using persuasion principles from Robert Cialdini's research.**
