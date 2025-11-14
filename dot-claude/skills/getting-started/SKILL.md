@@ -206,6 +206,30 @@ Where: `.claude/skills/docker-log-debugger/SKILL.md`
 
 **Example queries where you MUST run docker-log-debugger:** "Worker container keeps crashing, check the logs" • "Find errors in API docker logs from last 15 min" • "Why is postgres container restarting?"
 
+### aws-logs-query
+**Query AWS CloudWatch logs for staging and production**
+
+When to use: Debugging production/staging issues, investigating errors, monitoring Evolution API, checking what happened in production
+Where: `.claude/skills/aws-logs-query/SKILL.md`
+
+**Example queries where you MUST run aws-logs-query:** "What happened in production in the last hour?" • "Check staging logs for Evolution errors" • "Show me recent errors in prod" • "Find Evolution disconnection issues" • "Search past week for validation errors"
+
+**CRITICAL: Choose the right tool**
+- **CloudWatch Insights** for historical searches (> 1 hour, multi-day)
+- **`aws logs tail`** for recent logs (< 1 hour, real-time monitoring)
+- **NEVER use `tail --since 7d`** (extremely slow, will timeout)
+
+**YOU MUST:**
+- For historical searches: Use CloudWatch Insights with epoch timestamps
+- For real-time monitoring: Use `aws logs tail --follow`
+- For Evolution issues: Check BOTH main app logs (webhook processing) AND Evolution API logs (service itself)
+- Specify log group: `/ecs/codel-staging` or `/ecs/codel-prod`
+
+**Violations:**
+- ❌ Using `tail` for multi-day searches (use CloudWatch Insights)
+- ❌ Using Docker logs for production debugging (use AWS logs instead)
+- ❌ Not checking both main app AND Evolution API logs for Evolution issues
+
 ### semantic-code-search
 **Use for finding code by meaning**
 
