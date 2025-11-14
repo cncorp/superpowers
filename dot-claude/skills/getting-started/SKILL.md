@@ -133,7 +133,24 @@ Where: `.claude/skills/test-runner/SKILL.md`
 - ❌ Assuming tests pass without verification
 - ❌ Not reading the actual test output
 
-**FUNDAMENTAL RULE:** Tests ALWAYS pass on main/merge base. If a test fails after your changes, YOUR changes broke it. Verify with `git stash` → run tests → `git stash pop`.
+**🚨 FUNDAMENTAL HYGIENE RULE:**
+
+**We only commit code that passes tests. Therefore:**
+- Tests on `main` branch ALWAYS pass (CI enforces this)
+- Tests at your merge base ALWAYS pass (they passed to get into main)
+- **If tests fail after your changes → YOUR changes broke them**
+- The ONLY exception: stash/pop proves otherwise (rare!)
+
+**The Stash/Pop Verification Protocol:**
+```bash
+git stash                    # Remove your changes
+just test-all-mocked         # Run the failing suite
+# - Tests PASS? → Your changes broke them (fix your code)
+# - Tests FAIL? → Pre-existing issue (rare on main!)
+git stash pop                # Restore your changes
+```
+
+**NEVER say "that test was already broken" without running stash/pop first.**
 
 ### 🔥 langfuse-prompt-viewer
 **MANDATORY when KeyError or prompt schema issues occur**

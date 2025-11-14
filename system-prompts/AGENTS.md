@@ -268,6 +268,11 @@ Your implementation is complete when ALL of the following are true:
 - ✅ **Type Checking**: `cd api && just lint` passes (runs strict mypy on changed files)
 - ✅ **Pre-commit**: `pre-commit run --hook-stage manual --all-files` passes
 - ✅ **No Debug Code**: Remove all print statements, commented code, TODOs
+- ✅ **Test Failure Hygiene**: Only commit code that passes tests
+  - **Rule**: If tests fail after your changes, YOUR changes broke them (until proven otherwise)
+  - **Proof**: Use `git stash` → run tests → `git stash pop` to verify failures are pre-existing
+  - **Never assume**: Test failures on main/merge base are rare (CI enforces passing tests)
+  - See test-runner skill for detailed stash/pop verification protocol
 
 **5. Documentation**
 - ✅ **Updated CURRENT_SPEC.md**: Mark completed stages as done when applicable

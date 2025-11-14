@@ -26,6 +26,52 @@ allowed-tools:
 
 No exceptions. No shortcuts. No "it's a small change" excuses.
 
+## ⚠️ FUNDAMENTAL HYGIENE: Only Commit Code That Passes Tests
+
+**CRITICAL WORKFLOW PRINCIPLE:**
+
+We only commit code that passes tests. This means:
+
+**If tests fail after your changes → YOUR changes broke them (until proven otherwise)**
+
+### The Stash/Pop Verification Protocol
+
+**NEVER claim test failures are "unrelated" or "pre-existing" without proof.**
+
+**To verify a failure is truly unrelated:**
+```bash
+# 1. Remove your changes temporarily
+git stash
+
+# 2. Run the failing test suite
+just test-all-mocked         # Or whichever suite failed
+
+# 3. Observe the result:
+# - If tests PASS → YOUR changes broke them (fix your code)
+# - If tests FAIL → pre-existing issue (rare on main/merge base)
+
+# 4. Restore your changes
+git stash pop
+```
+
+**Why This Matters:**
+- Tests on `main` branch ALWAYS pass (CI enforces this)
+- Tests at your merge base ALWAYS pass (they passed to get into main)
+- Therefore: test failures after your changes = your changes broke them
+- The stash/pop protocol is the ONLY way to prove otherwise
+
+**DO NOT:**
+- ❌ Assume failures are unrelated
+- ❌ Say "that test was already broken"
+- ❌ Claim "it's just a flaky test" without verification
+- ❌ Skip investigation because "it's not my area"
+
+**ALWAYS:**
+- ✅ Stash changes first
+- ✅ Verify tests pass without your changes
+- ✅ Only then claim pre-existing issue (if true)
+- ✅ Otherwise: fix your code
+
 ## ⚠️ Always Use `just` Commands
 
 **Direct `pytest` is removed from blocklist** - but ALWAYS prefer `just` commands which handle Docker, migrations, and environment setup.
